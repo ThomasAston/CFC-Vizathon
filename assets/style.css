@@ -13,18 +13,27 @@ ul {
     font-family: 'LineIcons';
     src: url('/assets/fonts/LineIcons.woff2') format('woff2'),
          url('/assets/fonts/LineIcons.woff') format('woff'),
-         url('/assets/fonts/LineIcons.ttf') format('truetype'),
-         url('/assets/fonts/LineIcons.eot') format('embedded-opentype'),
-         url('/assets/fonts/LineIcons.svg#LineIcons') format('svg');
+         url('/assets/fonts/LineIcons.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
-/* Optional: style all tab icons */
-.tab-icon {
-    font-family: 'LineIcons';
-    margin-right: 8px;
+/* Shared style for section icons */
+.section-heading {
+    display: flex;
+    align-items: center;
+    font-family: "CFC Serif", serif;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 20px;
 }
+
+.section-heading .icon {
+    font-family: 'LineIcons';
+    margin-right: 10px;
+    font-size: 22px;
+}
+
 
 h1, h2, h3, h4, u, p {
     font-family: "CFC Serif", serif;

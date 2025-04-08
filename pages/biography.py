@@ -1,6 +1,7 @@
 from dash import html, dcc, Input, Output, State, callback
 import json
 import plotly.graph_objects as go
+from pages import load_demand
 
 # Load data
 with open("DATA/players.json") as f:
@@ -55,12 +56,12 @@ def render(player_id):
 
             html.Div([
                 html.Div([
-                    dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}),
+                    dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}, config={"displayModeBar": False}),
                     html.Div([
                         dcc.Dropdown(
                             id="comparison-dropdown",
                             options=comparison_options,
-                            placeholder="Compare to...",
+                            placeholder="Compare stats this season...",
                             style={
                                 "width": "300px",
                                 "margin-top": "0px",
@@ -97,11 +98,12 @@ def render(player_id):
 
 @callback(
     Output("player-tab-content", "children"),
-    Input("player-tabs", "value")
+    Input("player-tabs", "value"),
+    State("main-player-id", "data")
 )
-def render_tab(tab):
+def render_tab(tab, player_id):
     if tab == "LoadDemand":
-        return html.P("Load demand data and visuals go here.")
+        return load_demand.render_load_demand(player_id)
     elif tab == "Injury":
         return html.P("Injury history graph goes here.")
     elif tab == "Physical":
@@ -147,19 +149,57 @@ def update_radar(compare_id, base_id):
 
     base_r = normalize(base_data, max_vals)
     theta = list(radar_keys)
+
+    # 👇 Append the first value to close the shape
+    base_r.append(base_r[0])
+    theta.append(theta[0])
+    
+    # Tableau colorblind blue + orange
+    color1 = "#007ACC"
+    color2 = "#FF800E"
+
     traces = [
-        go.Scatterpolar(r=base_r, theta=theta, fill="toself", name=base_player["name"])
+        go.Scatterpolar(
+            r=base_r,
+            theta=theta,
+            fill="toself",
+            name=base_player["name"],
+            line=dict(color=color1)
+        )
     ]
 
     if comp_data:
         comp_r = normalize(comp_data, max_vals)
-        traces.append(go.Scatterpolar(r=comp_r, theta=theta, fill="toself", name=compare_player["name"]))
+        comp_r.append(comp_r[0])
+
+        traces.append(go.Scatterpolar(
+            r=comp_r,
+            theta=theta,
+            fill="toself",
+            name=compare_player["name"],
+            line=dict(color=color2)
+        ))
 
     return go.Figure(
-        data=traces,
-        layout=go.Layout(
-            polar={"radialaxis": {"visible": False}},
-            showlegend=True,
-            margin=dict(t=40, b=40, l=40, r=40)
+            data=traces,
+            layout=go.Layout(
+                polar=dict(
+                    bgcolor='white',
+                    radialaxis=dict(
+                        visible=True,
+                        showline=False,
+                        showgrid=True,
+                        gridcolor='#ccc',
+                        gridwidth=0.5,
+                        tickvals=[]
+                    ),
+                    angularaxis=dict(
+                        tickfont=dict(size=10),
+                        gridcolor='#ccc',
+                        gridwidth=0.5
+                    )
+                ),
+                showlegend=True,
+                margin=dict(t=40, b=40, l=40, r=40)
+            )
         )
-    )

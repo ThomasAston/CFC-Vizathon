@@ -1,0 +1,29 @@
+[
+    {
+        "date": "2025-04-10",
+        "time": "16:45",
+        "opponent": "Legia Warszawa",
+        "venue": "Away",
+        "competition": "UEFA Europa Conference League",
+        "logo": "https://media.api-sports.io/football/leagues/848.png",
+        "team_logo": "https://media.api-sports.io/football/teams/339.png"
+    },
+    {
+        "date": "2025-04-13",
+        "time": "13:00",
+        "opponent": "Ipswich",
+        "venue": "Home",
+        "competition": "Premier League",
+        "logo": "https://media.api-sports.io/football/leagues/39.png",
+        "team_logo": "https://media.api-sports.io/football/teams/57.png"
+    },
+    {
+        "date": "2025-04-17",
+        "time": "19:00",
+        "opponent": "Legia Warszawa",
+        "venue": "Home",
+        "competition": "UEFA Europa Conference League",
+        "logo": "https://media.api-sports.io/football/leagues/848.png",
+        "team_logo": "https://media.api-sports.io/football/teams/339.png"
+    }
+]
