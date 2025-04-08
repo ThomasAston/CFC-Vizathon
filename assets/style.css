@@ -3,3 +3,94 @@ ul {
     padding: 0;
     margin: 0;
 }
+@font-face {
+    font-family: "CFC Serif";
+    src: url("/assets/fonts/CFCSerif-Bold.ttf") format("truetype");
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'LineIcons';
+    src: url('/assets/fonts/LineIcons.woff2') format('woff2'),
+         url('/assets/fonts/LineIcons.woff') format('woff'),
+         url('/assets/fonts/LineIcons.ttf') format('truetype'),
+         url('/assets/fonts/LineIcons.eot') format('embedded-opentype'),
+         url('/assets/fonts/LineIcons.svg#LineIcons') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Optional: style all tab icons */
+.tab-icon {
+    font-family: 'LineIcons';
+    margin-right: 8px;
+}
+
+h1, h2, h3, h4, u, p {
+    font-family: "CFC Serif", serif;
+}
+
+/* Style the overall tab labels */
+.tab {
+    font-family: "CFC Serif", serif;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* Smaller font size for narrow/mobile screens */
+@media (max-width: 600px) {
+    .tab {
+        font-size: 24px;
+        padding: 0px;
+
+    }
+}
+
+/* Make secondary-level tabs smaller and more compact */
+#squad-type-tabs .tab {
+    font-size: 24px;
+    font-family: "CFC Serif", serif;
+    font-weight: normal;
+    padding: 6px 10px;
+    height: auto;
+    min-height: 50px;
+    line-height: 1.2;
+    background-color: #f7f7f7;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+#squad-type-tabs .tab--selected {
+    border-bottom: 2px solid #034694;
+    font-weight: bold;
+    background-color: #fff;
+}
+
+/* Make secondary-level tabs smaller and more compact */
+#player-tabs .tab {
+    font-size: 20px;
+    font-family: "CFC Serif", serif;
+    font-weight: normal;
+    height: auto;
+    min-height: 50px;
+    line-height: 1.2;
+    background-color: #f7f7f7;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    text-align: center; /* Ensure text is always centered */
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+
+#player-tabs .tab--selected {
+    border-bottom: 2px solid #034694;
+    font-weight: bold;
+    background-color: #fff;
+}
+
+@media (max-width: 600px) {
+    #player-tabs .tab {
+        font-size: 8px;
+    }
+}
