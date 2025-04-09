@@ -2,6 +2,14 @@ from dash import html, dcc, Input, Output, State, callback
 import json
 import plotly.graph_objects as go
 from pages import load_demand
+import matplotlib.colors as mcolors
+import pandas as pd
+
+# Load priority areas
+priority_df = pd.read_csv("DATA/CFC Individual Priority Areas.csv")
+
+# Set plot colors
+colors = [mcolors.to_hex(c) for c in ['tab:blue', 'tab:orange', 'tab:green']]
 
 # Load data
 with open("DATA/players.json") as f:
@@ -29,17 +37,19 @@ def render(player_id):
     position = player.get("position")
     comparison_options = [
         {"label": f"{p['name']} ({p['position']})", "value": str(p["id"])}
-        for p in player_lookup.values() if p.get("position") == position and str(p["id"]) != str(player_id)
+        for p in player_lookup.values()
+        if p.get("position") == position and str(p["id"]) != str(player_id)
     ]
 
     return html.Div([
         dcc.Link("\u2190 Back to Squads", href="/", style={"margin-bottom": "10px", "display": "inline-block"}),
 
         html.Div([
+            # Left: Player profile info
             html.Div([
                 html.Img(src=player["photo"], style={
-                    "height": "150px",
-                    "width": "150px",
+                    "height": "100px",
+                    "width": "100px",
                     "border-radius": "50%",
                     "object-fit": "cover",
                     "margin-right": "15px"
@@ -52,36 +62,74 @@ def render(player_id):
                     html.P(f"Weight: {player.get('weight', '-')}", style={"margin": "2px 0"}),
                     html.P(f"Nationality: {player.get('nationality', '-')}", style={"margin": "2px 0"}),
                 ])
-            ], style={"display": "flex", "flexWrap": "nowrap", "alignItems": "center"}),
-
-            html.Div([
-                html.Div([
-                    dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}, config={"displayModeBar": False}),
-                    html.Div([
-                        dcc.Dropdown(
-                            id="comparison-dropdown",
-                            options=comparison_options,
-                            placeholder="Compare stats this season...",
-                            style={
-                                "width": "300px",
-                                "margin-top": "0px",
-                                "font-size": "12px",
-                                "height": "30px",
-                                "line-height": "30px"
-                            },
-                        )
-                    ])
-                ])
             ], style={
-                "margin-left": "40px",
-                "flexShrink": "0"
+                "minWidth": "250px",
+                "flex": "1 1 300px",
+                "display": "flex",
+                "maxWidth": "300px",
+                "alignItems": "center",
+                "justifyContent": "center",
+                # "textAlign": "center",       # Center text
+            }),
+
+            # Middle: Radar + dropdown
+            html.Div([
+                dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}, config={"displayModeBar": False}),
+                dcc.Dropdown(
+                    id="comparison-dropdown",
+                    options=comparison_options,
+                    placeholder="Compare stats this season...",
+                    style={
+                        "width": "300px",
+                        "margin-top": "0px",
+                        "font-size": "12px",
+                        "height": "30px",
+                        "line-height": "30px"
+                    },
+                )
+            ], style={
+                "flex": "1 1 350px",
+                "marginLeft": "20px",
+                "marginTop":  "-20px",
+                "maxWidth": "350px",
+                "justifyContent": "center",
+            }),
+
+            # Right: Individual priority areas
+            html.Div([
+                html.H2(html.U("Priority Areas"), style={
+                    "marginBottom": "6px",
+                    "fontFamily": "CFC Serif"
+                }),
+                html.Ul([
+                    html.Li(
+                        html.P([
+                            html.Span(f"{row['Category']} – {row['Area']}: ", style={"fontWeight": "bold"}),
+                            row["Target"]
+                        ]),
+                        style={"marginBottom": "-40px"}  # 🔧 tighten spacing between bullets
+                    ) for _, row in priority_df.iterrows()
+                ], style={
+                    "listStyleType": "disc",
+                    "paddingLeft": "0px",
+                    "marginTop": "12px",
+                    "marginRight": "0px",
+                })
+
+            ], style={
+                "flex": "1 1 300px",
+                "marginLeft": "20px",
+                "marginRight": "20px",
+                "maxWidth": "300px"
             })
         ], style={
             "display": "flex",
             "flexWrap": "wrap",
-            "alignItems": "center",
-            "gap": "0px",
-            "marginBottom": "20px"
+            "alignItems": "flex-start",
+            "gap": "20px",
+            "justifyContent": "center",
+            "marginBottom": "20px",
+            "maxWidth": "1200px",
         }),
 
         dcc.Tabs(id="player-tabs", value="LoadDemand", mobile_breakpoint=0, children=[
@@ -91,10 +139,12 @@ def render(player_id):
             dcc.Tab(label="Recovery", value="Recovery"),
             dcc.Tab(label="External Factors", value="External"),
         ]),
+
         html.Div(id="player-tab-content", style={"padding": "10px"}),
 
         dcc.Store(id="main-player-id", data=str(player_id))
     ])
+
 
 @callback(
     Output("player-tab-content", "children"),
@@ -153,10 +203,6 @@ def update_radar(compare_id, base_id):
     # 👇 Append the first value to close the shape
     base_r.append(base_r[0])
     theta.append(theta[0])
-    
-    # Tableau colorblind blue + orange
-    color1 = "#007ACC"
-    color2 = "#FF800E"
 
     traces = [
         go.Scatterpolar(
@@ -164,7 +210,7 @@ def update_radar(compare_id, base_id):
             theta=theta,
             fill="toself",
             name=base_player["name"],
-            line=dict(color=color1)
+            line=dict(color=colors[0])
         )
     ]
 
@@ -177,7 +223,7 @@ def update_radar(compare_id, base_id):
             theta=theta,
             fill="toself",
             name=compare_player["name"],
-            line=dict(color=color2)
+            line=dict(color=colors[1])
         ))
 
     return go.Figure(
