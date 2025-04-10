@@ -55,7 +55,7 @@ def render(player_id):
                     "margin-right": "15px"
                 }),
                 html.Div([
-                    html.H2(html.U(player["name"]), style={"margin-bottom": "5px"}),
+                    html.H2(html.U(player["name"]), style={"margin-bottom": "5px", "fontFamily": "CFC Serif"}),
                     html.P(f"Position: {player.get('position', '-')}", style={"margin": "2px 0"}),
                     html.P(f"Age: {player.get('age', '-')}", style={"margin": "2px 0"}),
                     html.P(f"Height: {player.get('height', '-')}", style={"margin": "2px 0"}),

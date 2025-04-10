@@ -87,39 +87,30 @@ marks = {
     for d in mark_dates
 }
 
-zone_colors = [
-            "rgba(173, 216, 230, 0.6)",  # LightBlue (Zone 1)
-            "rgba(135, 206, 250, 0.6)",  # SkyBlue
-            "rgba(100, 149, 237, 0.6)",  # CornflowerBlue
-            "rgba(65, 105, 225, 0.6)",   # RoyalBlue
-            "rgba(0, 0, 139, 0.6)",      # DarkBlue (Zone 5)
-        ],
+zone_colors = ["rgba(173, 216, 230, 0.6)",  # LightBlue (Zone 1)
+                "rgba(135, 206, 250, 0.6)",  # SkyBlue
+                "rgba(100, 149, 237, 0.6)",  # CornflowerBlue
+                "rgba(65, 105, 225, 0.6)",   # RoyalBlue
+                "rgba(0, 0, 139, 0.6)"      # DarkBlue (Zone 5)
+                ]
 
-def collapsible_graph(title, graph_id, figure, default_open=True):
+
+def collapsible_section(title, content, section_id):
     return html.Div([
-        html.Button(
+        dbc.Button(
             title,
-            id=f"{graph_id}-toggle",
-            n_clicks=0,
-            style={
-                "fontWeight": "bold",
-                "marginBottom": "6px",
-                "border": "none",
-                "background": "none",
-                "cursor": "pointer",
-                "textAlign": "left",
-                "padding": "0",
-                "fontSize": "18px",
-            }
+            id=f"{section_id}-toggle",
+            className="mb-2",
+            color="white",
+            style={"width": f"{min(len(title), 100)}%", "textAlign": "left"}
         ),
-        dcc.Collapse(
-            id=f"{graph_id}-collapse",
-            is_open=default_open,
-            children=[
-                dcc.Graph(id=graph_id, figure=figure, config={"displayModeBar": False})
-            ]
+        dbc.Collapse(
+            content,
+            id=f"{section_id}-collapse",
+            is_open=False
         )
-    ], style={"marginBottom": "20px"})
+    ])
+
 
 def render_load_demand(player_id):
     return html.Div([
@@ -197,7 +188,7 @@ def update_load_demand(selected_range):
         "y1": 1,
         "xref": "x",
         "yref": "paper",
-        "line": {"color": "gray", "width": 1, "dash": "dash"}
+        "line": {"color": "gray", "width": 1}
     } for _, row in matchdays.iterrows()]
     annotations = [{
         "x": row["date"],
@@ -238,13 +229,14 @@ def update_load_demand(selected_range):
             "flexWrap": "wrap"  # Added to allow wrapping on narrow screens
         }),
 
-        html.H4("Distance", style={"marginBottom": "10px"}),
-        dcc.Graph(
+        # html.H4("Distance", style={"marginBottom": "10px", "fontFamily": "CFC Serif"}),
+        collapsible_section("Distance", dcc.Graph(
             figure={
                 "data": [
                     {
                         "x": gps_df["date"],
                         "y": gps_df["distance"],
+                        "name": "(m)",
                         "type": "scatter",
                         "mode": "lines+markers",
                         "line": {"color": colors[0]},
@@ -271,7 +263,7 @@ def update_load_demand(selected_range):
                 ],
                 "layout": {
                     "xaxis": {"title": "Date", "range": x_range},
-                    "yaxis": {"title": "Distance (m)"},
+                    "yaxis": {"title": "Distance (m)", "fixedrange": True},
                     "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
                     "height": 300,
                     "plot_bgcolor": "#fff",
@@ -285,14 +277,14 @@ def update_load_demand(selected_range):
                         "font": {"size": 12}
                     },
                     "shapes": shapes,
-                    "annotations": annotations
+                    "annotations": annotations,
+                    "dragmode": "pan",
                 }
             },
-            config={"displayModeBar": False}
-        ),
+            config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+        ), "distance"),
 
-        html.H4("Distance/Minute", style={"marginTop": "30px", "marginBottom": "10px"}),
-        dcc.Graph(
+        collapsible_section("Distance/Minute", dcc.Graph(
             figure={
                 "data": [
                     {
@@ -302,7 +294,7 @@ def update_load_demand(selected_range):
                         "mode": "lines+markers",
                         "line": {"color": colors[0]},
                         "marker": {"size": 6},
-                        "name": "Distance/Min",
+                        "name": "(m/min)",
                         "showlegend": False,
                         "connectgaps": True
                     },
@@ -325,7 +317,7 @@ def update_load_demand(selected_range):
                 ],
                 "layout": {
                     "xaxis": {"title": "Date", "range": x_range},
-                    "yaxis": {"title": "m/min"},
+                    "yaxis": {"title": "m/min", "fixedrange": True},
                     "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
                     "height": 300,
                     "plot_bgcolor": "#fff",
@@ -338,14 +330,15 @@ def update_load_demand(selected_range):
                         "font": {"size": 12}
                     },
                     "shapes": shapes,
-                    "annotations": annotations
+                    "annotations": annotations,
+                    "dragmode": "pan"
                 }
             },
-            config={"displayModeBar": False}
-        ),
+            config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+        ), "distance_per_min"),
 
-        html.H4("Top Speed", style={"marginTop": "30px", "marginBottom": "10px"}),
-        dcc.Graph(
+
+        collapsible_section("Top Speed", dcc.Graph(
             figure={
                 "data": [
                     {
@@ -355,7 +348,7 @@ def update_load_demand(selected_range):
                         "mode": "lines+markers",
                         "line": {"color": colors[0]},
                         "marker": {"size": 6},
-                        "name": "Distance/Min",
+                        "name": "km/h",
                         "showlegend": False,
                         "connectgaps": True
                     },
@@ -378,7 +371,7 @@ def update_load_demand(selected_range):
                 ],
                 "layout": {
                     "xaxis": {"title": "Date", "range": x_range},
-                    "yaxis": {"title": "m/min"},
+                    "yaxis": {"title": "m/min", "fixedrange": True},
                     "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
                     "height": 300,
                     "plot_bgcolor": "#fff",
@@ -391,14 +384,16 @@ def update_load_demand(selected_range):
                         "font": {"size": 12}
                     },
                     "shapes": shapes,
-                    "annotations": annotations
+                    "annotations": annotations,
+                    "dragmode": "pan"
                 }
             },
-            config={"displayModeBar": False}
-        ),
+            config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+        ), "top_speed"),
 
+        collapsible_section("Distance at High-Speed",
         html.Div([
-            html.H4("Distance at High-Speed", style={"marginBottom": "6px"}),
+            html.H4("Distance at High-Speed", style={"marginBottom": "6px", "fontFamily": "CFC Serif"}),
             dcc.Dropdown(
                 id="speed-threshold-dropdown",
                 options=[
@@ -411,10 +406,10 @@ def update_load_demand(selected_range):
                 style={"width": "200px", "marginBottom": "10px"}
             ),
             dcc.Graph(id="high-speed-graph", config={"displayModeBar": False})
-        ], style={"marginTop": "30px"}),\
+        ], style={"marginTop": "30px"}), "high_speed"),
         
+        collapsible_section("Accel/Decel Efforts",
         html.Div([
-            html.H4("Accel/Decel Efforts", style={"marginBottom": "6px"}),
             dcc.Dropdown(
                 id="accel-threshold-dropdown",
                 options=[
@@ -427,98 +422,78 @@ def update_load_demand(selected_range):
                 style={"width": "200px", "marginBottom": "10px"}
             ),
             dcc.Graph(id="high-accel-graph", config={"displayModeBar": False})
-        ], style={"marginTop": "30px"}),
+        ], style={"marginTop": "30px"}), "accel_decel"),
 
-        html.H4("Heart Rate Zone Duration", style={"marginTop": "30px", "marginBottom": "10px"}),
-        
-        html.Div([
+        collapsible_section(
+            "Heart Rate Zone Duration",
             html.Div([
-                html.H5(zone, style={"margin": "0", "fontSize": "10px", "color": "#555"}),
-                html.P(f"{percentage:.1f}%", style={"margin": "0", "fontWeight": "bold"})
-            ], style={"flex": "1"}) for zone, percentage in zone_percentages.items()
-        ], style={"display": "flex", "gap": "20px", "marginBottom": "10px", "flexWrap": "wrap"}),
-
-        dcc.Graph(
-            figure={
-                "data": [
-                    {
-                        "x": filtered_df["date"],
-                        "y": filtered_df["hr_zone_1_sec"],
-                        "stackgroup": "one",
-                        "name": "Zone 1",
-                        "line": {"width": 0.5, "color": "rgba(173, 216, 230, 0.6)"},
-                        "fillcolor": "rgba(173, 216, 230, 0.6)"
+                html.Div([
+                    html.H5(zone, style={"margin": "0", "fontSize": "10px", "color": "#555"}),
+                    html.P(f"{percentage:.1f}%", style={"margin": "0", "fontWeight": "bold"})
+                ], style={"flex": "1"}) for zone, percentage in zone_percentages.items()
+            ] + [
+                dcc.Graph(
+                    figure={
+                        "data": [
+                            {
+                                "x": filtered_df["date"],
+                                "y": filtered_df[f"hr_zone_{i}_sec"],
+                                "stackgroup": "one",
+                                "name": f"Zone {i}",
+                                "line": {"width": 0.5, "color": zone_colors[i - 1]},
+                                "fillcolor": zone_colors[i - 1]
+                            } for i in range(1, 5)
+                        ],
+                        "layout": {
+                            "xaxis": {"title": "Date", "range": x_range},
+                            "yaxis": {"title": "Time in Zone (sec)", "fixedrange": True},
+                            "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
+                            "height": 300,
+                            "plot_bgcolor": "#fff",
+                            "paper_bgcolor": "#fff",
+                            "legend": {
+                                "x": 0,
+                                "y": 1,
+                                "xanchor": "left",
+                                "yanchor": "top",
+                                "font": {"size": 12}
+                            },
+                            "shapes": shapes,
+                            "annotations": annotations,
+                            "dragmode": "pan"
+                        }
                     },
-                    {
-                        "x": filtered_df["date"],
-                        "y": filtered_df["hr_zone_2_sec"],
-                        "stackgroup": "one",
-                        "name": "Zone 2",
-                        "line": {"width": 0.5, "color": "rgba(135, 206, 250, 0.6)"},
-                        "fillcolor": "rgba(135, 206, 250, 0.6)"
-                    },
-                    {
-                        "x": filtered_df["date"],
-                        "y": filtered_df["hr_zone_3_sec"],
-                        "stackgroup": "one",
-                        "name": "Zone 3",
-                        "line": {"width": 0.5, "color": "rgba(100, 149, 237, 0.6)"},
-                        "fillcolor": "rgba(100, 149, 237, 0.6)"
-                    },
-                    {
-                        "x": filtered_df["date"],
-                        "y": filtered_df["hr_zone_4_sec"],
-                        "stackgroup": "one",
-                        "name": "Zone 4",
-                        "line": {"width": 0.5, "color": "rgba(65, 105, 225, 0.6)"},
-                        "fillcolor": "rgba(65, 105, 225, 0.6)"
-                    },
-                    {
-                        "x": filtered_df["date"],
-                        "y": filtered_df["hr_zone_5_sec"],
-                        "stackgroup": "one",
-                        "name": "Zone 5",
-                        "line": {"width": 0.5, "color": "rgba(0, 0, 139, 0.6)"},
-                        "fillcolor": "rgba(0, 0, 139, 0.6)"
-                    },
-                ],
-                "layout": {
-                    "xaxis": {"title": "Date", "range": x_range},
-                    "yaxis": {"title": "Time in Zone (sec)"},
-                    "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
-                    "height": 300,
-                    "plot_bgcolor": "#fff",
-                    "paper_bgcolor": "#fff",
-                    "legend": {
-                        "x": 0,
-                        "y": 1,
-                        "xanchor": "left",
-                        "yanchor": "top",
-                        "font": {"size": 12}
-                    },
-                    "shapes": shapes,
-                    "annotations": annotations
-                }
-            },
-            config={"displayModeBar": False}
+                    config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+                )
+            ], style={"display": "flex", "flexDirection": "column", "gap": "10px"}),
+            "hr_zones"
         ),
 
-        html.Div([
-            html.H4("Acute:Chronic Workload Ratio", style={"marginTop": "30px", "marginBottom": "6px"}),
-            dcc.Dropdown(
-                id="acwr-metric-dropdown",
-                options=[
-                    {"label": "Total Distance", "value": "distance"},
-                    {"label": "Distance/Min", "value": "distance_per_min"},
-                    {"label": "Accels/Decels >3.5 m/s²", "value": "accel_decel_over_3_5"},
-                    {"label": "Distance >21 km/h", "value": "distance_over_21"},
-                ],
-                value="distance",
-                clearable=False,
-                style={"width": "300px", "marginBottom": "10px"}
+        collapsible_section(
+            "Acute:Chronic Workload Ratio",
+            html.Div(
+                [
+                    dcc.Dropdown(
+                        id="acwr-metric-dropdown",
+                        options=[
+                            {"label": "Total Distance", "value": "distance"},
+                            {"label": "Distance/Min", "value": "distance_per_min"},
+                            {"label": "Accels/Decels >3.5 m/s²", "value": "accel_decel_over_3_5"},
+                            {"label": "Distance >21 km/h", "value": "distance_over_21"},
+                        ],
+                        value="distance",
+                        clearable=False,
+                        style={"width": "300px", "marginBottom": "10px"}
+                    ),
+                ] + [
+                    dcc.Graph(
+                        id="acwr-graph",
+                        config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
+                    )
+                ]
             ),
-        ]),
-        dcc.Graph(id="acwr-graph", config={"displayModeBar": False}),
+            "acwr"
+        )
     ])
 
 @callback(
@@ -548,7 +523,7 @@ def update_high_speed_plot(speed_column, selected_range):
         "y1": 1,
         "xref": "x",
         "yref": "paper",
-        "line": {"color": "gray", "width": 1, "dash": "dash"}
+        "line": {"color": "gray", "width": 1}
     } for _, row in matchdays.iterrows()]
     annotations = [{
         "x": row["date"],
@@ -565,6 +540,7 @@ def update_high_speed_plot(speed_column, selected_range):
             {
                 "x": filtered_df["date"],
                 "y": filtered_df[speed_column],
+                "name": "(m)",
                 "type": "scatter",
                 "mode": "lines+markers",
                 "line": {"color": colors[0]},
@@ -591,7 +567,7 @@ def update_high_speed_plot(speed_column, selected_range):
         ],
         "layout": {
             "xaxis": {"title": "Date", "range": x_range},
-            "yaxis": {"title": "Distance (m)"},
+            "yaxis": {"title": "Distance (m)", "fixedrange": True},
             "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
             "height": 300,
             "plot_bgcolor": "#fff",
@@ -604,7 +580,8 @@ def update_high_speed_plot(speed_column, selected_range):
                 "font": {"size": 12}
             },
             "shapes": shapes,
-            "annotations": annotations
+            "annotations": annotations,
+            "dragmode": "pan"
         }
     }
 
@@ -635,7 +612,7 @@ def update_high_accel_plot(accel_column, selected_range):
         "y1": 1,
         "xref": "x",
         "yref": "paper",
-        "line": {"color": "gray", "width": 1, "dash": "dash"}
+        "line": {"color": "gray", "width": 1}
     } for _, row in matchdays.iterrows()]
     annotations = [{
         "x": row["date"],
@@ -652,6 +629,7 @@ def update_high_accel_plot(accel_column, selected_range):
             {
                 "x": filtered_df["date"],
                 "y": filtered_df[accel_column],
+                "name": "num. efforts",
                 "type": "scatter",
                 "mode": "lines+markers",
                 "line": {"color": colors[0]},
@@ -678,7 +656,7 @@ def update_high_accel_plot(accel_column, selected_range):
         ],
         "layout": {
             "xaxis": {"title": "Date", "range": x_range},
-            "yaxis": {"title": "Distance (m)"},
+            "yaxis": {"title": "Distance (m)", "fixedrange": True},
             "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
             "height": 300,
             "plot_bgcolor": "#fff",
@@ -691,7 +669,8 @@ def update_high_accel_plot(accel_column, selected_range):
                 "font": {"size": 12}
             },
             "shapes": shapes,
-            "annotations": annotations
+            "annotations": annotations,
+            "dragmode": "pan"
         }
     }
 
@@ -731,11 +710,37 @@ def update_acwr_plot(metric, selected_range):
         ],
         "layout": {
         "xaxis": {"title": "Date", "range": x_range},
-        "yaxis": {"title": "ACWR", "range": [0, None]},
+        "yaxis": {"title": "ACWR", "range": [0, None], "fixedrange": True},
         "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
         "height": 300,
         "plot_bgcolor": "#fff",
         "paper_bgcolor": "#fff",
-        "showlegend": False
+        "showlegend": False,
+        "dragmode": "pan"
         }
     }
+
+from dash import ctx, Output, Input, State, callback
+
+section_ids = [
+    "distance", "distance_per_min", "top_speed", "high_speed",
+    "accel_decel", "hr_zones", "acwr"
+]
+
+@callback(
+    [Output(f"{section_id}-collapse", "is_open") for section_id in section_ids],
+    [Input(f"{section_id}-toggle", "n_clicks") for section_id in section_ids],
+    [State(f"{section_id}-collapse", "is_open") for section_id in section_ids],
+    prevent_initial_call=True
+)
+def toggle_collapsible(*args):
+    n = len(section_ids)
+    clicks = args[:n]
+    states = args[n:]
+
+    triggered = ctx.triggered_id
+
+    return [
+        not state if triggered == f"{section_id}-toggle" else state
+        for section_id, state in zip(section_ids, states)
+    ]
