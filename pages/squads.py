@@ -29,7 +29,7 @@ def render_squad_type_tab(tab):
                 value=options[0],
                 clearable=False,
                 searchable=False,
-                style={"width": "250px", "margin-bottom": "25px"}
+                style={"width": "250px", "margin-bottom": "10px"}
             ),
             html.Div(id="squad-dropdown-content")
         ])

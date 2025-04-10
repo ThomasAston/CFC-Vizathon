@@ -55,7 +55,7 @@ def render(player_id):
                     "margin-right": "15px"
                 }),
                 html.Div([
-                    html.H2(html.U(player["name"]), style={"margin-bottom": "5px", "fontFamily": "CFC Serif"}),
+                    html.H2(player["name"], style={"margin-bottom": "5px", "fontFamily": "CFC Serif"}),
                     html.P(f"Position: {player.get('position', '-')}", style={"margin": "2px 0"}),
                     html.P(f"Age: {player.get('age', '-')}", style={"margin": "2px 0"}),
                     html.P(f"Height: {player.get('height', '-')}", style={"margin": "2px 0"}),
@@ -66,7 +66,7 @@ def render(player_id):
                 "minWidth": "250px",
                 "flex": "1 1 300px",
                 "display": "flex",
-                "maxWidth": "300px",
+                # "maxWidth": "300px",
                 "alignItems": "center",
                 "justifyContent": "center",
                 # "textAlign": "center",       # Center text
@@ -74,53 +74,52 @@ def render(player_id):
 
             # Middle: Radar + dropdown
             html.Div([
-                dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}, config={"displayModeBar": False}),
-                dcc.Dropdown(
-                    id="comparison-dropdown",
-                    options=comparison_options,
-                    placeholder="Compare stats this season...",
-                    style={
-                        "width": "300px",
-                        "margin-top": "0px",
-                        "font-size": "12px",
-                        "height": "30px",
-                        "line-height": "30px"
-                    },
-                )
+                html.Div([
+                    dcc.Graph(id="radar-compare", style={"height": "220px", "width": "350px"}, config={"displayModeBar": False}),
+                    dcc.Dropdown(
+                        id="comparison-dropdown",
+                        options=comparison_options,
+                        placeholder="Compare stats this season...",
+                        style={
+                            "width": "300px",
+                            "marginTop": "0px",
+                            "fontSize": "12px",
+                            "height": "30px",
+                            "lineHeight": "30px"
+                        },
+                    )
+                ], style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center"
+                })
             ], style={
                 "flex": "1 1 350px",
-                "marginLeft": "20px",
-                "marginTop":  "-20px",
-                "maxWidth": "350px",
+                # "marginLeft": "20px",
+                "marginTop": "-20px",
                 "justifyContent": "center",
+                "display": "flex"
             }),
 
             # Right: Individual priority areas
             html.Div([
-                html.H2(html.U("Priority Areas"), style={
-                    "marginBottom": "6px",
-                    "fontFamily": "CFC Serif"
-                }),
-                html.Ul([
-                    html.Li(
+                html.Div([
+                    html.H2("Priority Areas", style={"margin-bottom": "5px", "fontFamily": "CFC Serif"}),
+                    html.Div([
                         html.P([
                             html.Span(f"{row['Category']} – {row['Area']}: ", style={"fontWeight": "bold"}),
-                            row["Target"]
-                        ]),
-                        style={"marginBottom": "-40px"}  # 🔧 tighten spacing between bullets
-                    ) for _, row in priority_df.iterrows()
-                ], style={
-                    "listStyleType": "disc",
-                    "paddingLeft": "0px",
-                    "marginTop": "12px",
-                    "marginRight": "0px",
-                })
-
+                            f" {row['Target']}"
+                        ], style={"margin": "10px 0"}) for _, row in priority_df.iterrows()
+                    ])
+                ])
             ], style={
                 "flex": "1 1 300px",
                 "marginLeft": "20px",
                 "marginRight": "20px",
-                "maxWidth": "300px"
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",     # center the whole section in its flex container
+                "textAlign": "left",        # but left-align the text inside
             })
         ], style={
             "display": "flex",
@@ -129,7 +128,6 @@ def render(player_id):
             "gap": "20px",
             "justifyContent": "center",
             "marginBottom": "20px",
-            "maxWidth": "1200px",
         }),
 
         dcc.Tabs(id="player-tabs", value="LoadDemand", mobile_breakpoint=0, children=[
