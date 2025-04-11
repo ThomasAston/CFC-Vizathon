@@ -5,22 +5,26 @@ from datetime import datetime, timedelta
 
 def collapsible_section(title, content, section_id):
     return html.Div([
-        dbc.Button(
-            title,
-            id=f"{section_id}-toggle",
-            className="mb-2",
-            color="white",
-            style={"width": "90%", "textAlign": "center", "letterSpacing": "1px"}  # Reduced letter spacing
+        html.Div(
+            dbc.Button(
+                title,
+                id=f"{section_id}-toggle",
+                className="mb-2",
+                color="white",
+                style={"width": "90%", "letterSpacing": "1px"}
+            ),
+            style={"textAlign": "center", "margin": "0 auto", "width": "100%"}
         ),
         dbc.Collapse(
             html.Div(
                 content,
-                style={"maxWidth": "90%", "margin": "0 auto"}  # ⬅️ limit width and center
+                style={"maxWidth": "90%", "margin": "0 auto"}
             ),
             id=f"{section_id}-collapse",
             is_open=False
         )
     ], style={"marginBottom": "20px"})
+
 
 def date_slider(
     label_id,

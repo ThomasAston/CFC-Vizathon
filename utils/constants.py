@@ -17,7 +17,6 @@ metrics = [
     "hr_zone_1_sec", "hr_zone_2_sec", "hr_zone_3_sec", "hr_zone_4_sec", "hr_zone_5_sec"
 ]
 
-
 # Time string metrics to be converted
 time_metrics = {
     "hr_zone_1_sec", "hr_zone_2_sec", "hr_zone_3_sec", "hr_zone_4_sec", "hr_zone_5_sec"

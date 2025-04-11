@@ -23,6 +23,7 @@ ul {
     display: flex;
     align-items: center;
     font-family: "CFC Serif", serif;
+    letter-spacing: 1px;
     font-weight: bold;
     font-size: 20px;
     margin-bottom: 20px;
@@ -109,3 +110,39 @@ h3 {
         font-size: 8px;
     }
 }
+
+.logo-title {
+    font-size: 32px;
+  }
+  
+  @media (max-width: 768px) {
+    .logo-title {
+      font-size: 22px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .logo-title {
+      font-size: 14px;
+    }
+  }
+  
+/* style.css */
+
+.responsive-logo {
+    height: 300px;
+    max-width: 100%;
+  }
+  
+  /* @media (max-width: 768px) {
+    .responsive-logo {
+      height: 100px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .responsive-logo {
+      height: 36px;
+    }
+  } */
+  

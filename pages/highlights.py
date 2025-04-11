@@ -20,6 +20,11 @@ score_color = emboss_color(score)
 
 # Full highlights layout
 layout = html.Div([
+    html.Div(
+        html.Img(src="/assets/logo.png", className="responsive-logo"),
+        style={"textAlign": "center", "marginBottom": "0px"}
+    ),
+
     html.H2([
         html.Span("\uea48", className="icon"),
         "Upcoming Fixtures"

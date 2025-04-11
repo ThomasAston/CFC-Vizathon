@@ -62,57 +62,97 @@ def load_recovery_data(csv_path):
     df = pd.read_csv(csv_path)
     df["sessionDate"] = pd.to_datetime(df["sessionDate"], format="%d/%m/%Y")
 
-    # Pivot to wide format: rows = dates, columns = metrics
-    pivoted = df.pivot(index="sessionDate", columns="metric", values="value").sort_index()
+    df = pd.read_csv("DATA/CFC Recovery status Data.csv")
+    df["sessionDate"] = pd.to_datetime(df["sessionDate"], format="%d/%m/%Y")
 
-    # Optional: flatten the multi-index column (if it ever happens)
-    pivoted.columns.name = None
+    # Pivot so each metric becomes a column, but keep sessionDate as a column
+    pivoted = df.pivot_table(index="sessionDate", columns="metric", values="value").reset_index().rename(columns={"sessionDate": "date"})
+
     return pivoted
 
 
 def compute_gradient_df(df, metrics=None, max_segments=30):
+    import numpy as np
+
     gradient_data = []
 
-    max_values = {metric: df[metric].max() for metric in metrics}
+    # Get max and min for scaling
+    max_vals = {m: df[m].max() for m in metrics}
+    min_vals = {m: df[m].min() for m in metrics}
 
     for _, row in df.iterrows():
         date = row["date"]
         for metric in metrics:
-            total = row[metric]
-            max_val = max_values[metric]
+            total = pd.to_numeric(row[metric], errors="coerce")
+            max_val = pd.to_numeric(max_vals[metric], errors="coerce")
+            min_val = pd.to_numeric(min_vals[metric], errors="coerce")
 
-            if pd.isna(total) or not np.isfinite(total) or not np.isfinite(max_val) or max_val == 0:
+            if pd.isna(total) or not np.isfinite(total):
                 continue
 
-            target_segment_height = max_val / max_segments
-            full_segments = int(total // target_segment_height)
-            remainder = total % target_segment_height
+            if total >= 0 and max_val > 0:
+                # Positive values (e.g. 0 → +1)
+                target_segment_height = max_val / max_segments
+                full_segments = int(total // target_segment_height)
+                remainder = total % target_segment_height
 
-            for i in range(full_segments):
-                y0 = i * target_segment_height
-                y1 = y0 + target_segment_height
-                color_val = y1 / max_val
-                gradient_data.append({
-                    "date": date,
-                    "metric": metric,
-                    "base": y0,
-                    "height": target_segment_height,
-                    "color_val": color_val,
-                    "total": total
-                })
+                for i in range(full_segments):
+                    y0 = i * target_segment_height
+                    y1 = y0 + target_segment_height
+                    gradient_data.append({
+                        "date": date,
+                        "metric": metric,
+                        "base": y0,
+                        "height": target_segment_height,
+                        "color_val": y1 / max_val,
+                        "total": total,
+                        "color_scale": "Blues"
+                    })
 
-            if remainder > 0:
-                y0 = full_segments * target_segment_height
-                y1 = y0 + remainder
-                color_val = y1 / max_val
-                gradient_data.append({
-                    "date": date,
-                    "metric": metric,
-                    "base": y0,
-                    "height": remainder,
-                    "color_val": color_val,
-                    "total": total
-                })
+                if remainder > 0:
+                    y0 = full_segments * target_segment_height
+                    y1 = y0 + remainder
+                    gradient_data.append({
+                        "date": date,
+                        "metric": metric,
+                        "base": y0,
+                        "height": remainder,
+                        "color_val": y1 / max_val,
+                        "total": total,
+                        "color_scale": "Blues"
+                    })
+
+            elif total < 0 and min_val < 0:
+                # Negative values (e.g. 0 → -1)
+                target_segment_height = abs(min_val) / max_segments
+                full_segments = int(abs(total) // target_segment_height)
+                remainder = abs(total) % target_segment_height
+
+                for i in range(full_segments):
+                    y0 = -(i * target_segment_height)
+                    y1 = y0 - target_segment_height
+                    gradient_data.append({
+                        "date": date,
+                        "metric": metric,
+                        "base": y0,
+                        "height": -target_segment_height,
+                        "color_val": abs(y1) / abs(min_val),
+                        "total": total,
+                        "color_scale": "Oranges"
+                    })
+
+                if remainder > 0:
+                    y0 = -(full_segments * target_segment_height)
+                    y1 = y0 - remainder
+                    gradient_data.append({
+                        "date": date,
+                        "metric": metric,
+                        "base": y0,
+                        "height": -remainder,
+                        "color_val": abs(y1) / abs(min_val),
+                        "total": total,
+                        "color_scale": "Oranges"
+                    })
 
     return pd.DataFrame(gradient_data)
 

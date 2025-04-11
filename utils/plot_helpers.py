@@ -55,6 +55,8 @@ def add_average_lines(fig, match_avg, training_avg, suffix=""):
     )
     return fig
 
+import plotly.graph_objects as go
+
 def base_bar_figure(
     df,
     metric,
@@ -62,29 +64,50 @@ def base_bar_figure(
     match_avg=None,
     training_avg=None,
     hover_suffix="",
-    yaxis_range=[0, None],
+    y_range=[None, None],
     shapes=None,
     annotations=None
 ):
     filtered = df[df["metric"] == metric]
+    
+    positive_df = filtered[filtered["total"] >= 0]
+    negative_df = filtered[filtered["total"] < 0]
 
-    fig = px.bar(
-        filtered,
-        x="date",
-        y="height",
-        base="base",
-        color="color_val",
-        color_continuous_scale="Blues",
-        height=300,
-        custom_data=["total"]
-    )
+    fig = go.Figure()
 
-    fig.update_traces(
-        marker_line_width=0,
-        hovertemplate=f"%{{customdata[0]:.2f}}{hover_suffix}<extra></extra>"
-    )
+    # Positive bars in Blues
+    if not positive_df.empty:
+        fig.add_trace(go.Bar(
+            x=positive_df["date"],
+            y=positive_df["height"],
+            base=positive_df["base"],
+            marker=dict(
+                color=positive_df["color_val"],
+                colorscale="Blues",
+                line=dict(width=0)
+            ),
+            customdata=positive_df["total"],
+            hovertemplate=f"%{{customdata:.2f}}{hover_suffix}<extra></extra>",
+            name="Positive"
+        ))
 
-    # Add dummy traces for legend if averages are provided
+    # Negative bars in Oranges
+    if not negative_df.empty:
+        fig.add_trace(go.Bar(
+            x=negative_df["date"],
+            y=negative_df["height"],
+            base=negative_df["base"],
+            marker=dict(
+                color=negative_df["color_val"],
+                colorscale="Oranges",
+                line=dict(width=0)
+            ),
+            customdata=negative_df["total"],
+            hovertemplate=f"%{{customdata:.2f}}{hover_suffix}<extra></extra>",
+            name="Negative"
+        ))
+
+    # Add dummy traces for average legends
     if match_avg is not None:
         fig.add_scatter(
             x=[None], y=[None], mode="lines", name="Match Avg",
@@ -96,7 +119,7 @@ def base_bar_figure(
             line=dict(color="#ec9706", dash="dash", width=1), showlegend=True
         )
 
-    # Add average lines if provided
+    # Add average lines
     avg_lines = []
     if match_avg is not None:
         avg_lines.append({
@@ -115,7 +138,7 @@ def base_bar_figure(
 
     fig.update_layout(
         xaxis=dict(title=None, range=x_range, fixedrange=True, showline=True, linecolor='gray'),
-        yaxis=dict(title=None, fixedrange=True, range=yaxis_range),
+        yaxis=dict(title=None, fixedrange=True, range=y_range),
         plot_bgcolor="#fff",
         paper_bgcolor="#fff",
         margin=dict(l=40, r=10, t=30, b=40),
@@ -127,11 +150,11 @@ def base_bar_figure(
         annotations=annotations or []
     )
 
-    fig.update_coloraxes(showscale=False)
     return fig
 
-def bubble_plot(data, title="Load Profile Overview"):
-    fig = px.scatter(
+
+def bubble_plot_figure(data):
+    return px.scatter(
         data[data["day_duration"] > 0],
         x="distance",
         y="distance_per_min",
@@ -145,7 +168,7 @@ def bubble_plot(data, title="Load Profile Overview"):
         hovertemplate=(
             "<b>%{customdata[0]|%d %b %Y}</b><br><br>"
             "Total Distance: %{customdata[1]:,.0f} m<br>"
-            "Distance/Min: %{customdata[2]:.1f} m/min<br>"
+            "Average Speed: %{customdata[2]:.1f} m/min<br>"
             "High-Speed Distance: %{customdata[3]:,.0f} m<br>"
             "Session Type: %{customdata[4]}<extra></extra>"
         )
@@ -153,24 +176,14 @@ def bubble_plot(data, title="Load Profile Overview"):
         margin={"l": 40, "r": 10, "t": 30, "b": 40},
         plot_bgcolor="#fff",
         paper_bgcolor="#fff",
-        xaxis=dict(
-            title="Total Distance (m)",
-            showline=True,
-            linecolor="gray",
-            linewidth=1,
-            showgrid=True,
-            gridcolor="rgba(0, 0, 0, 0.05)",
-        ),
-        yaxis=dict(
-            title="Distance per Minute (m/min)",
-            showgrid=True,
-            gridcolor="rgba(0, 0, 0, 0.05)",
-        ),
+        xaxis=dict(title="Total Distance (m)", showline=True, linecolor="gray"),
+        yaxis=dict(title="Average Speed (m/min)", showline=True),
         legend_title="Session Type",
         legend=dict(x=1, y=1, xanchor="right", yanchor="top", font=dict(size=12)),
-        dragmode=False,
+        dragmode=False
     )
 
+def bubble_plot(data, title="Load Profile Overview"):
     return html.Div([
         html.H4(title, style={"textAlign": "center", "marginBottom": "10px"}),
         html.P(
@@ -178,8 +191,9 @@ def bubble_plot(data, title="Load Profile Overview"):
             "Bubble size represents total high-speed running distance for a session.",
             style={"textAlign": "left"}
         ),
-        dcc.Graph(figure=fig, config={"displayModeBar": False})
-        ], style={"maxWidth": "90%", "margin": "0 auto", "marginBottom": "30px"})
+        dcc.Graph(id="bubble-plot", figure=bubble_plot_figure(data), config={"displayModeBar": False})
+    ], style={"maxWidth": "90%", "margin": "0 auto", "marginBottom": "30px"})
+
 
 
 def create_physical_heatmap(df_filtered, expression_type, title):
