@@ -2,14 +2,19 @@ from dash import html, dcc, Input, Output, callback
 from datetime import datetime, timedelta
 import matplotlib.colors as mcolors
 from dash import ctx
+import plotly.express as px
 from utils.data_loader import load_player_data, load_gps_data, compute_gradient_df, compute_acwr
-from utils.plot_helpers import base_bar_figure, get_matchday_shapes_annotations
+from utils.plot_helpers import base_bar_figure, get_matchday_shapes_annotations, bubble_plot
 from utils.components import collapsible_section, date_slider
 from utils.constants import *
 
 colors = [mcolors.to_hex(c) for c in ['tab:blue', 'tab:orange', 'tab:green']]
 player_lookup = load_player_data("DATA/players.json")
 gps_df = load_gps_data("DATA/CFC GPS Data.csv")
+
+# Calculate average duration for training and match days
+training_avg_duration = gps_df[gps_df["is_training_day"]]["day_duration"].mean()
+match_avg_duration = gps_df[gps_df["is_match_day"]]["day_duration"].mean()
 
 # Calculate average distance for training and match days
 training_avg_distance = gps_df[gps_df["is_training_day"]]["distance"].mean()
@@ -43,15 +48,6 @@ def render_load_demand(player_id):
 
 
 @callback(
-    Output("reporting-period-label", "children"),
-    Input("reporting-slider", "value")
-)
-def update_reporting_label(value):
-    start = datetime.fromtimestamp(value[0]).strftime("%d/%m/%Y")
-    end = datetime.fromtimestamp(value[1]).strftime("%d/%m/%Y")
-    return f"Select Report Period: {start} – {end}"
-
-@callback(
     Output("load-demand-output", "children"),
     Input("reporting-slider", "value")
 )
@@ -69,11 +65,16 @@ def update_load_demand(selected_range):
     }
 
     # Matchdays and training days (within selected range)
-    recent = gps_df[gps_df["date"].between(start_date, end_date)]
-    total_distance = int(recent["distance"].sum())
-    matchdays_in_range = recent[(recent["md_plus_code"] == 0) & (recent["day_duration"] > 0)]
-    trainingdays_in_range = recent[(recent["md_plus_code"] != 0) & (recent["day_duration"] > 0)]
+    recent = gps_df[gps_df["date"].between(start_date, end_date) & gps_df["day_duration"] > 0]
+    
+    # Filter gradient data for the selected date range
+    range_gradient_df = gradient_df[
+        (gradient_df["date"] >= start_date) & (gradient_df["date"] <= end_date)
+    ]
 
+    total_distance = int(recent["distance"].sum())
+    matchdays_in_range = recent[(recent["md_plus_code"] == 0)]
+    trainingdays_in_range = recent[(recent["md_plus_code"] != 0) & (recent["day_duration"] > 0)]
 
     return html.Div([
         html.Div([
@@ -104,9 +105,24 @@ def update_load_demand(selected_range):
             "flexWrap": "wrap"
         }),
 
+        bubble_plot(recent),
+
+        collapsible_section("Duration", dcc.Graph(
+            figure=base_bar_figure(
+                range_gradient_df,
+                "day_duration",
+                x_range,
+                match_avg_duration,
+                training_avg_duration,
+                hover_suffix=" min",
+                shapes=shapes,
+                annotations=annotations,
+            ), config={"displayModeBar": False}
+        ), "day_duration"),
+
         collapsible_section("Distance", dcc.Graph(
             figure=base_bar_figure(
-                gradient_df,
+                range_gradient_df,
                 "distance",
                 x_range,
                 match_avg_distance,
@@ -119,7 +135,7 @@ def update_load_demand(selected_range):
 
         collapsible_section("Distance/Min", dcc.Graph(
             figure=base_bar_figure(
-                gradient_df,
+                range_gradient_df,
                 "distance_per_min",
                 x_range,
                 match_avg_distance_per_min,
@@ -132,7 +148,7 @@ def update_load_demand(selected_range):
 
         collapsible_section("Top Speed", dcc.Graph(
             figure=base_bar_figure(
-                gradient_df,
+                range_gradient_df,
                 "peak_speed",
                 x_range,
                 match_avg_peak_speed,
@@ -208,7 +224,7 @@ def update_load_demand(selected_range):
                             } for i in range(1, 6)
                         ],
                         "layout": {
-                            "xaxis": {"title": "Date", "range": x_range},
+                            "xaxis": {"title": "Date", "range": x_range, "fixedrange": True},
                             "yaxis": {"title": "Time in Zone (sec)", "fixedrange": True},
                             "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
                             "height": 300,
@@ -223,7 +239,7 @@ def update_load_demand(selected_range):
                             },
                             "shapes": shapes,
                             "annotations": annotations,
-                            "dragmode": "pan"
+                            "dragmode": False
                         }
                     },
                     config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False}
@@ -269,13 +285,15 @@ def update_high_speed_plot(speed_column, selected_range):
     start_date = datetime.fromtimestamp(selected_range[0])
     end_date = datetime.fromtimestamp(selected_range[1])
     x_range = [start_date, end_date]
-
+    range_gradient_df = gradient_df[
+        (gradient_df["date"] >= start_date) & (gradient_df["date"] <= end_date)
+    ]
     # Averages
     match_avg = gps_df[gps_df["is_match_day"]][speed_column].mean()
     training_avg = gps_df[gps_df["is_training_day"]][speed_column].mean()
 
     fig=base_bar_figure(
-                gradient_df,
+                range_gradient_df,
                 speed_column,
                 x_range,
                 match_avg,
@@ -297,13 +315,15 @@ def update_high_accel_plot(accel_column, selected_range):
     start_date = datetime.fromtimestamp(selected_range[0])
     end_date = datetime.fromtimestamp(selected_range[1])
     x_range = [start_date, end_date]
-
+    range_gradient_df = gradient_df[
+        (gradient_df["date"] >= start_date) & (gradient_df["date"] <= end_date)
+    ]
     # Averages
     match_avg = gps_df[gps_df["is_match_day"]][accel_column].mean()
     training_avg = gps_df[gps_df["is_training_day"]][accel_column].mean()
 
     fig=base_bar_figure(
-                gradient_df,
+                range_gradient_df,
                 accel_column,
                 x_range,
                 match_avg,
@@ -349,21 +369,21 @@ def update_acwr_plot(metric, selected_range):
             }
         ],
         "layout": {
-        "xaxis": {"title": "Date", "range": x_range},
+        "xaxis": {"title": "Date", "range": x_range, "fixedrange": True},
         "yaxis": {"title": "ACWR", "range": [0, None], "fixedrange": True},
         "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
         "height": 300,
         "plot_bgcolor": "#fff",
         "paper_bgcolor": "#fff",
         "showlegend": False,
-        "dragmode": "pan"
+        "dragmode": False
         }
     }
 
 from dash import ctx, Output, Input, State, callback
 
 section_ids = [
-    "distance", "distance_per_min", "top_speed", "high_speed",
+    "day_duration", "distance", "distance_per_min", "top_speed", "high_speed",
     "accel_decel", "hr_zones", "acwr"
 ]
 
@@ -384,3 +404,13 @@ def toggle_collapsible(*args):
         not state if triggered == f"{section_id}-toggle" else state
         for section_id, state in zip(section_ids, states)
     ]
+
+
+@callback(
+    Output("reporting-period-label", "children"),
+    Input("reporting-slider", "value")
+)
+def update_reporting_load(value):
+    start = datetime.fromtimestamp(value[0]).strftime("%d/%m/%Y")
+    end = datetime.fromtimestamp(value[1]).strftime("%d/%m/%Y")
+    return f"Select Report Period: {start} – {end}"

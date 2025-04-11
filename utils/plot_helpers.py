@@ -1,5 +1,9 @@
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
+from dash import html, dcc
+from utils.constants import colors
+import matplotlib.colors as mcolors
 
 def get_matchday_shapes_annotations(df):
     matchday_df = df[df["is_match_day"] == True]
@@ -17,12 +21,14 @@ def get_matchday_shapes_annotations(df):
 
     annotations = [{
         "x": row["date"],
-        "y": 1.1,
+        "y": 1,
         "xref": "x",
         "yref": "paper",
         "text": row["opposition_code"],
         "showarrow": False,
-        "font": {"color": "gray", "size": 10}
+        "textangle": -90,
+        "font": {"color": "gray", "size": 10},
+        "yanchor": "bottom"
     } for _, row in matchday_df.iterrows()]
 
     return shapes, annotations
@@ -53,10 +59,10 @@ def base_bar_figure(
     df,
     metric,
     x_range,
-    match_avg,
-    training_avg,
+    match_avg=None,
+    training_avg=None,
     hover_suffix="",
-    yaxis_range=None,
+    yaxis_range=[0, None],
     shapes=None,
     annotations=None
 ):
@@ -75,45 +81,47 @@ def base_bar_figure(
 
     fig.update_traces(
         marker_line_width=0,
-        hovertemplate=f"%{{customdata[0]:.0f}}{hover_suffix}<extra></extra>"
+        hovertemplate=f"%{{customdata[0]:.2f}}{hover_suffix}<extra></extra>"
     )
 
-    # Dummy traces for legend
-    fig.add_scatter(
-        x=[None], y=[None], mode="lines", name="Match Avg",
-        line=dict(color="#d16002", dash="dash", width=1), showlegend=True
-    )
-    fig.add_scatter(
-        x=[None], y=[None], mode="lines", name="Training Avg",
-        line=dict(color="#ec9706", dash="dash", width=1), showlegend=True
-    )
+    # Add dummy traces for legend if averages are provided
+    if match_avg is not None:
+        fig.add_scatter(
+            x=[None], y=[None], mode="lines", name="Match Avg",
+            line=dict(color="#d16002", dash="dash", width=1), showlegend=True
+        )
+    if training_avg is not None:
+        fig.add_scatter(
+            x=[None], y=[None], mode="lines", name="Training Avg",
+            line=dict(color="#ec9706", dash="dash", width=1), showlegend=True
+        )
 
-    avg_lines = [
-        {
+    # Add average lines if provided
+    avg_lines = []
+    if match_avg is not None:
+        avg_lines.append({
             "type": "line", "xref": "paper", "yref": "y",
             "x0": 0, "x1": 1,
             "y0": match_avg, "y1": match_avg,
             "line": {"color": "#d16002", "width": 1, "dash": "dash"}
-        },
-        {
+        })
+    if training_avg is not None:
+        avg_lines.append({
             "type": "line", "xref": "paper", "yref": "y",
             "x0": 0, "x1": 1,
             "y0": training_avg, "y1": training_avg,
             "line": {"color": "#ec9706", "width": 1, "dash": "dash"}
-        }
-    ]
+        })
 
     fig.update_layout(
-        xaxis=dict(title=None, range=x_range, fixedrange=False),
+        xaxis=dict(title=None, range=x_range, fixedrange=True, showline=True, linecolor='gray'),
         yaxis=dict(title=None, fixedrange=True, range=yaxis_range),
         plot_bgcolor="#fff",
         paper_bgcolor="#fff",
         margin=dict(l=40, r=10, t=30, b=40),
         showlegend=True,
-        dragmode="pan",
         hovermode="x unified",
         bargap=0,
-        
         legend=dict(x=0, y=1, xanchor="left", yanchor="top", font=dict(size=12)),
         shapes=[*(shapes or []), *avg_lines],
         annotations=annotations or []
@@ -122,4 +130,193 @@ def base_bar_figure(
     fig.update_coloraxes(showscale=False)
     return fig
 
+def bubble_plot(data, title="Load Profile Overview"):
+    fig = px.scatter(
+        data[data["day_duration"] > 0],
+        x="distance",
+        y="distance_per_min",
+        size="distance_over_21",
+        color=data["is_match_day"].map({True: "Match", False: "Training"}),
+        size_max=30,
+        height=400,
+        color_discrete_map={"Match": "#d16002", "Training": "#1f77b4"},
+        custom_data=["date", "distance", "distance_per_min", "distance_over_21", "session_type"]
+    ).update_traces(
+        hovertemplate=(
+            "<b>%{customdata[0]|%d %b %Y}</b><br><br>"
+            "Total Distance: %{customdata[1]:,.0f} m<br>"
+            "Distance/Min: %{customdata[2]:.1f} m/min<br>"
+            "High-Speed Distance: %{customdata[3]:,.0f} m<br>"
+            "Session Type: %{customdata[4]}<extra></extra>"
+        )
+    ).update_layout(
+        margin={"l": 40, "r": 10, "t": 30, "b": 40},
+        plot_bgcolor="#fff",
+        paper_bgcolor="#fff",
+        xaxis=dict(
+            title="Total Distance (m)",
+            showline=True,
+            linecolor="gray",
+            linewidth=1,
+            showgrid=True,
+            gridcolor="rgba(0, 0, 0, 0.05)",
+        ),
+        yaxis=dict(
+            title="Distance per Minute (m/min)",
+            showgrid=True,
+            gridcolor="rgba(0, 0, 0, 0.05)",
+        ),
+        legend_title="Session Type",
+        legend=dict(x=1, y=1, xanchor="right", yanchor="top", font=dict(size=12)),
+        dragmode=False,
+    )
 
+    return html.Div([
+        html.H4(title, style={"textAlign": "center", "marginBottom": "10px"}),
+        html.P(
+            "Training and match day load profiles. "
+            "Bubble size represents total high-speed running distance for a session.",
+            style={"textAlign": "left"}
+        ),
+        dcc.Graph(figure=fig, config={"displayModeBar": False})
+        ], style={"maxWidth": "90%", "margin": "0 auto", "marginBottom": "30px"})
+
+
+def create_physical_heatmap(df_filtered, expression_type, title):
+    """
+    Creates a dcc.Graph component showing a heatmap for the specified expression type (isometric/dynamic)
+    from the physical development data.
+
+    Args:
+        df_filtered (pd.DataFrame): Filtered DataFrame with benchmarkPct values
+        expression_type (str): "isometric" or "dynamic"
+        title (str): Title to display above the heatmap
+
+    Returns:
+        html.Div: A Dash component containing the heatmap plot
+    """
+    df_expr = df_filtered[df_filtered["expression"] == expression_type]
+    pivot = df_expr.pivot_table(
+        index="quality",
+        columns="movement",
+        values="benchmarkPct",
+        aggfunc="mean"
+    ).sort_index()
+
+    pivot.index = pivot.index.str.capitalize()
+    pivot.columns = pivot.columns.str.capitalize()
+
+    fig = px.imshow(
+        pivot,
+        text_auto=".2f",
+        color_continuous_scale="Blues",
+        aspect="auto"
+    ).update_layout(
+        margin={"l": 40, "r": 10, "t": 0, "b": 20},
+        xaxis_title=None,
+        yaxis_title=None,
+        coloraxis_showscale=False,
+        dragmode=False,
+        plot_bgcolor="#fff",
+        paper_bgcolor="#fff"
+    )
+
+    return html.Div([
+        html.H4(title, style={"textAlign": "center"}),
+        dcc.Graph(
+            figure=fig,
+            config={"displayModeBar": False},
+            style={
+                "height": 400,
+                "width": "100%",
+                "maxWidth": "90%",
+                "margin": "0 auto"
+            }
+        )
+    ], style={
+        "width": "100%",
+        "maxWidth": "600px",
+        "margin": "0 auto",
+        "marginBottom": "20px"
+    })
+
+def recovery_radar_chart(pivoted_df):
+    # Filter to only composite metric columns (excluding total score)
+    composite_cols = [col for col in pivoted_df.columns 
+                      if col.endswith("_baseline_composite") and col != "emboss_baseline_score"]
+
+    # Drop rows where all composites are missing
+    df_clean = pivoted_df[composite_cols].dropna(how="all")
+    if df_clean.empty:
+        return go.Figure().update_layout(title="No recovery data available.")
+
+    # Get the most recent score for each metric
+    latest_scores = df_clean.apply(lambda col: col.dropna().iloc[-1] if not col.dropna().empty else None)
+
+    radar_df = pd.DataFrame({
+        "category": [col.replace("_baseline_composite", "").replace("_", " ").title() for col in latest_scores.index],
+        "score": latest_scores.values
+    }).dropna()
+
+    if radar_df.empty:
+        return go.Figure().update_layout(title="No valid composite scores to display.")
+    
+    fig = go.Figure()
+    # Add a circle at r=0 with color colors[1] and dashed line style
+    fig.add_trace(go.Scatterpolar(
+        r=[0] * len(radar_df["category"]) + [0],
+        theta=list(radar_df["category"]) + [radar_df["category"].iloc[0]],
+        fill='toself',
+        line=dict(color=colors[1]),
+        name="Normative Score"
+    ))
+    
+    fig.add_trace(go.Scatterpolar(
+        r=list(radar_df["score"]) + [radar_df["score"].iloc[0]],
+        theta=list(radar_df["category"]) + [radar_df["category"].iloc[0]],
+        fill='toself',
+        line=dict(color=colors[0]),
+        name="Composite Score"
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            bgcolor='white',
+            radialaxis=dict(
+                visible=True,
+                showline=False,
+                showgrid=True,
+                gridcolor='#ccc',
+                gridwidth=0.5,
+                tickvals=[],
+                range=[-1, 1]  # Force r axis to be between -1 and 1
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10),
+                gridcolor='#ccc',
+                gridwidth=0.5
+            )
+        ),
+        showlegend=True,
+        legend=dict(
+            x=0.9, y=0.9, xanchor="right", yanchor="top",
+            font=dict(size=10)
+        ),
+        margin={"l": 40, "r": 40, "t": 20, "b": 20},
+        paper_bgcolor="#fff",
+        plot_bgcolor="#fff",
+        dragmode="pan",
+        height=400
+    )
+
+    return fig
+
+
+def emboss_color(score, vmin=-1, vmax=1):
+    """
+    Map score from [vmin, vmax] to a color on a red → yellow → green scale.
+    """
+    cmap = mcolors.LinearSegmentedColormap.from_list("emboss", ["#d62728", "#ffbf00", "#2ca02c"])  # red → yellow → green
+    norm_score = (score - vmin) / (vmax - vmin)
+    norm_score = max(0, min(1, norm_score))  # clamp between 0 and 1
+    return mcolors.to_hex(cmap(norm_score))

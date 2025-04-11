@@ -5,7 +5,7 @@ from dash import Input, Output, callback
 
 layout = html.Div([
     # Tabs outside the padded content
-    dcc.Tabs(id="main-tabs", value="Squads", mobile_breakpoint=0, children=[
+    dcc.Tabs(id="main-tabs", value="Highlights", mobile_breakpoint=0, children=[
         dcc.Tab(label="Highlights", value="Highlights"),
         dcc.Tab(label="Squads", value="Squads"),
     ]),

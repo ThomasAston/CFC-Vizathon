@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
-from dash import html, dcc
+from dash import html, dcc, Input, Output, callback
 import pandas as pd
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 def collapsible_section(title, content, section_id):
     return html.Div([
@@ -63,3 +63,82 @@ def date_slider(
 
         html.Div(id=output_id, style={"textAlign": "center"})
     ], style={"textAlign": "center", "marginBottom": "30px"})
+
+
+def create_fixture_cards(fixtures):
+    return html.Div([
+        html.Div([
+            # Date and Time
+            html.Div([
+                html.Div(f"{fix['date'][8:10]}-{fix['date'][5:7]}-{fix['date'][0:4]}", style={
+                    "fontWeight": "bold",
+                    "fontSize": "clamp(12px, 2vw, 18px)"
+                }),
+                html.Div(fix["time"], style={
+                    "fontSize": "clamp(10px, 1.5vw, 16px)",
+                    "color": "#555"
+                })
+            ], style={
+                "minWidth": "75px",
+                "textAlign": "left",
+                "marginRight": "10px",
+            }),
+
+            # Team logo and name
+            html.Div([
+                html.Img(src=fix["team_logo"], style={
+                    "height": "32px",
+                    "width": "auto",
+                    "marginRight": "10px"
+                }),
+                html.Div(f"{fix['opponent']} ({fix['venue']})", style={
+                    "fontWeight": "bold",
+                    "fontSize": "clamp(10px, 2vw, 18px)",
+                    "whiteSpace": "nowrap",
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis"
+                })
+            ], style={
+                "display": "flex",
+                "alignItems": "center",
+                "minWidth": "150px",
+                "justifyContent": "flex-center",
+                "marginLeft": "auto"
+            }),
+
+            # Competition logo only (center aligned)
+            html.Div([
+                html.Img(src=fix["logo"], style={
+                    "height": "22px",
+                    "width": "auto"
+                })
+            ], style={
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "flex-center",
+                "marginLeft": "auto"
+            }),
+
+        ], style={
+            "display": "flex",
+            "alignItems": "center",
+            "padding": "12px 16px",
+            "border": "1px solid #ccc",
+            "borderRadius": "8px",
+            "fontFamily": "CFC Serif",
+            "marginBottom": "12px",
+            "flexWrap": "nowrap",
+            "width": "100%",  # Force cards to have the same width
+            "maxWidth": "600px",  # Ensure cards do not exceed max width
+            "minWidth": "300px"   # Ensure cards do not go below min width
+        }) for fix in fixtures
+    ], style={
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "margin": "0 auto",
+        "width": "100%",  # Ensure the container respects the card width constraints
+        "maxWidth": "600px",
+        "minWidth": "300px"
+    })
