@@ -102,6 +102,7 @@ def update_load_demand(selected_range):
             "whiteSpace": "nowrap",
             "margin": "10px auto 20px auto",
             "maxWidth": "90%",
+            "marginTop": "50px",
             "flexWrap": "wrap"
         }),
 

@@ -48,10 +48,20 @@ def date_slider(
                     int((max_date - timedelta(weeks=initial_weeks)).timestamp()),
                     int(max_date.timestamp())
                 ],
-                marks={
-                    int(d.timestamp()): d.strftime('%b %Y')
+                marks = {
+                    int(d.timestamp()): {
+                        "label": d.strftime('%b %Y'),
+                        "style": {
+                            "transform": "translateX(-20px) translateY(12px) rotate(-90deg)",
+                            "transformOrigin": "center",
+                            "display": "inline-block",
+                            "whiteSpace": "nowrap",
+                            "fontSize": "12px",
+                            "color": "#555"
+                        }
+                    }
                     for d in pd.date_range(min_date, max_date, freq="2MS")
-                },
+                }
             )
         ], style={
             "marginBottom": "30px",

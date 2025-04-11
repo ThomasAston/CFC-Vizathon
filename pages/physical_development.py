@@ -54,7 +54,7 @@ def update_physical_demand(selected_range):
     ]
 
     return html.Div([
-        html.H3("Average Benchmark % Over Reporting Period", style={"textAlign": "center", "marginBottom": "20px"}),
+        html.H3("Average Benchmark % Over Reporting Period", style={"textAlign": "center", "marginBottom": "20px", "marginTop": "50px"}),
 
         html.Div([
             create_physical_heatmap(df_filtered, "isometric", "Isometric Expression"),
@@ -69,46 +69,58 @@ def update_physical_demand(selected_range):
 
         collapsible_section("Isometric Expression Trends", html.Div([
             html.Div([
-                dcc.Dropdown(
-                    id="iso-movement-dropdown",
-                    options=[{"label": m.title(), "value": m} for m in phys_df[phys_df["expression"] == "isometric"]["movement"].unique()],
-                    value="agility",
-                    searchable=False,
-                    clearable=False,
-                    style={"width": "200px", "marginBottom": "10px", "margin": "0 auto"}
-                ),
-                dcc.Dropdown(
-                    id="iso-quality-dropdown",
-                    options=[],  # Start empty and populate via callback
-                    value="acceleration",
-                    searchable=False,
-                    clearable=False,
-                    style={"width": "200px", "marginBottom": "10px", "margin": "0 auto"}
-                ),
-            ], style={"display": "flex", "gap": "20px", "justifyContent": "center"}),
+                    dcc.Dropdown(
+                        id="iso-movement-dropdown",
+                        options=[{"label": m.title(), "value": m} for m in phys_df[phys_df["expression"] == "isometric"]["movement"].unique()],
+                        value="agility",
+                        searchable=False,
+                        clearable=False,
+                        style={"minWidth": "200px", "flex": "1"}
+                    ),
+                    dcc.Dropdown(
+                        id="iso-quality-dropdown",
+                        options=[],
+                        value="acceleration",
+                        searchable=False,
+                        clearable=False,
+                        style={"minWidth": "200px", "flex": "1"}
+                    )
+                ], style={
+                    "display": "flex",
+                    "flexWrap": "wrap",
+                    "gap": "10px",
+                    "justifyContent": "center",
+                    "marginBottom": "10px"
+                }),
 
             dcc.Graph(id="iso-trend-graph", config={"displayModeBar": False})
         ]), "iso_trends"),
 
         collapsible_section("Dynamic Expression Trends", html.Div([
             html.Div([
-                dcc.Dropdown(
-                    id="dyn-movement-dropdown",
-                    options=[{"label": m.title(), "value": m} for m in phys_df[phys_df["expression"] == "dynamic"]["movement"].unique()],
-                    value="agility",
-                    searchable=False,
-                    clearable=False,
-                    style={"width": "200px", "marginBottom": "10px", "margin": "0 auto"}
-                ),
-                dcc.Dropdown(
-                    id="dyn-quality-dropdown",
-                    options=[],  # Start empty and populate via callback
-                    value="acceleration",
-                    searchable=False,
-                    clearable=False,
-                    style={"width": "200px", "marginBottom": "10px", "margin": "0 auto"}
-                ),
-            ], style={"display": "flex", "gap": "20px", "justifyContent": "center"}),
+                    dcc.Dropdown(
+                        id="dyn-movement-dropdown",
+                        options=[{"label": m.title(), "value": m} for m in phys_df[phys_df["expression"] == "dynamic"]["movement"].unique()],
+                        value="agility",
+                        searchable=False,
+                        clearable=False,
+                        style={"minWidth": "200px", "flex": "1"}
+                    ),
+                    dcc.Dropdown(
+                        id="dyn-quality-dropdown",
+                        options=[],
+                        value="acceleration",
+                        searchable=False,
+                        clearable=False,
+                        style={"minWidth": "200px", "flex": "1"}
+                    )
+                ], style={
+                    "display": "flex",
+                    "flexWrap": "wrap",
+                    "gap": "10px",
+                    "justifyContent": "center",
+                    "marginBottom": "10px"
+                }),
 
             dcc.Graph(id="dyn-trend-graph", config={"displayModeBar": False})
         ]), "dyn_trends")
