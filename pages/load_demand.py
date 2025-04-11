@@ -30,14 +30,31 @@ min_date = max_date - timedelta(weeks=52)
 shapes, annotations = get_matchday_shapes_annotations(gps_df)
 
 section_ids = [
-    "day_duration", "distance", "distance_per_min", "top_speed", "high_speed",
-    "accel_decel", "hr_zones", "acwr"
+    "load_demand_info", 
+    "day_duration", "distance", "distance_per_min", "top_speed",
+    "high_speed", "accel_decel", "hr_zones", "acwr"
 ]
 
 def render_load_demand(player_id):
 
     return html.Div([
-        html.Div([
+            collapsible_section(
+                "Module Guide",
+                html.Div([
+                    html.P("This module summarises the external physical load experienced by players during training and matches. Metrics include:"),
+                    html.Ul([
+                        html.Li("Session duration (how long each session lasted)"),
+                        html.Li("Distance covered and intensity (distance per min), which can be thought of as the average speed of the session"),
+                        html.Li("Top speed and high-speed efforts, which are the maximum speed and distance covered at high speeds in a session"),
+                        html.Li("Acceleration/deceleration efforts, which are the number of times a player accelerates or decelerates above a certain threshold"),
+                        html.Li("Heart rate zones, which indicate the amount of time spent in different heart rate zones during a session"),
+                        html.Li("Acute:Chronic Workload Ratio (ACWR), which is a measure of training load that compares the acute load (recent training) to the chronic load (long-term training). This can be useful for identifying players who may be at risk of injury due to excessive training load."),
+                    ]),
+                    html.P("Use the reporting period slider to explore changes over time."),
+                ]),
+                section_id="load_demand_info"
+            ),
+
             date_slider(
                 label_id="reporting-period-label",
                 slider_id="reporting-slider",
@@ -49,6 +66,11 @@ def render_load_demand(player_id):
             html.Div(id="summary-box", style={"width": "100%", "marginTop": "50px", "textAlign": "center"}),
             html.Div([
                 html.H4("Load Profile Overview", style={"textAlign": "center", "marginBottom": "10px"}),
+                html.P(
+                    "Training and match day load profiles. "
+                    "Bubble size represents total high-speed running distance for a session.",
+                    style={"textAlign": "left"}
+                ),
                 dcc.Graph(id="bubble-plot", config={"displayModeBar": False})
             ], style={"maxWidth": "90%", "margin": "0 auto", "marginBottom": "30px", "marginTop": "50px"}),
             collapsible_section("Duration", html.Div(id="day_duration-content"), "day_duration"),
@@ -59,17 +81,7 @@ def render_load_demand(player_id):
             collapsible_section("Accel/Decel Efforts", html.Div(id="accel_decel-content"), "accel_decel"),
             collapsible_section("Heart Rate Zone Duration", html.Div(id="hr_zones-content"), "hr_zones"),
             collapsible_section("Acute:Chronic Workload Ratio", html.Div(id="acwr-content"), "acwr"),
-        ], style={
-            "maxWidth": "90%",
-            "width": "100%",
-            "margin": "0 auto"
-        })
-    ], style={
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center",
-        "width": "100%"
-    })
+        ])
 
 
 @callback(
@@ -359,6 +371,7 @@ def update_high_accel_plot(accel_column, selected_range):
         shapes=shapes, annotations=annotations
     )
 
+
 @callback(
     Output("hr_zones-content", "children"),
     Input("hr_zones-collapse", "is_open"),
@@ -372,39 +385,70 @@ def render_hr_zones(is_open, selected_range):
     end_date = datetime.fromtimestamp(selected_range[1])
     x_range = [start_date, end_date]
 
-    return dcc.Graph(
-        figure={
-            "data": [
-                {
-                    "x": gps_df["date"],
-                    "y": gps_df[f"hr_zone_{i}_sec"],
-                    "stackgroup": "one",
-                    "name": f"Zone {i}",
-                    "line": {"width": 0.5, "color": zone_colors[i - 1]},
-                    "fillcolor": zone_colors[i - 1]
-                } for i in range(1, 6)
-            ],
-            "layout": {
-                "xaxis": {"title": "Date", "range": x_range, "fixedrange": True},
-                "yaxis": {"title": "Time in Zone (sec)", "fixedrange": True},
-                "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
-                "height": 300,
-                "plot_bgcolor": "#fff",
-                "paper_bgcolor": "#fff",
-                "legend": {
-                    "x": 0,
-                    "y": 1,
-                    "xanchor": "left",
-                    "yanchor": "top",
-                    "font": {"size": 12}
-                },
-                "shapes": shapes,
-                "annotations": annotations,
-                "dragmode": False
-            }
-        },
-        config={"displayModeBar": False}
-    )
+    recent = gps_df[
+        (gps_df["date"] >= start_date) &
+        (gps_df["date"] <= end_date)
+    ]
+
+    zone_totals = {zone: recent[zone].sum() for zone in zone_cols}
+    total_time = sum(zone_totals.values())
+
+    zone_percentages = {
+        zone.replace("_sec", "").replace("hr_zone_", "Zone "): (val / total_time * 100 if total_time else 0)
+        for zone, val in zone_totals.items()
+    }
+
+    return html.Div([
+        # Horizontally aligned zone percentage summaries
+        html.Div([
+            html.Div([
+                html.H5(zone, style={"margin": "0", "fontSize": "10px", "color": "#555"}),
+                html.P(f"{percentage:.1f}%", style={"margin": "0", "fontWeight": "bold"})
+            ], style={"textAlign": "center", "minWidth": "60px"})
+            for zone, percentage in zone_percentages.items()
+        ], style={
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "space-around",
+            "marginBottom": "10px"
+        }),
+
+        # Graph
+        dcc.Graph(
+            figure={
+                "data": [
+                    {
+                        "x": gps_df["date"],
+                        "y": gps_df[f"hr_zone_{i}_sec"],
+                        "stackgroup": "one",
+                        "name": f"Zone {i}",
+                        "line": {"width": 0.5, "color": zone_colors[i - 1]},
+                        "fillcolor": zone_colors[i - 1]
+                    } for i in range(1, 6)
+                ],
+                "layout": {
+                    "xaxis": {"title": "Date", "range": x_range, "fixedrange": True},
+                    "yaxis": {"title": "Time in Zone (sec)", "fixedrange": True},
+                    "margin": {"l": 40, "r": 10, "t": 30, "b": 40},
+                    "height": 300,
+                    "plot_bgcolor": "#fff",
+                    "paper_bgcolor": "#fff",
+                    "legend": {
+                        "x": 0,
+                        "y": 1,
+                        "xanchor": "left",
+                        "yanchor": "top",
+                        "font": {"size": 12}
+                    },
+                    "shapes": shapes,
+                    "annotations": annotations,
+                    "dragmode": False
+                }
+            },
+            config={"displayModeBar": False}
+        )
+    ])
+
 
 @callback(
     Output("acwr-graph", "figure"),

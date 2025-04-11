@@ -9,10 +9,24 @@ gradient_df = compute_physical_gradient_df(phys_df)
 max_date = phys_df["testDate"].max()
 min_date = phys_df["testDate"].min()
 
-section_ids = ["iso_trends", "dyn_trends"]
+section_ids = ["physical_development_info", "iso_trends", "dyn_trends"]
 
 def render_physical_development(player_id):
     return html.Div([
+        collapsible_section(
+            "Module Guide",
+            html.Div([
+                html.P("This module summarises physical testing performance over time. Metrics include:"),
+                html.Ul([
+                    html.Li("Isometric and dynamic expression benchmark percentages"),
+                    html.Li("Trends across selected qualities and movements"),
+                    html.Li("Filter by expression type, movement (agility, sprint etc.), and quality (acceleration, deceleration etc.)"),
+                ]),
+                html.P("Use this to track development and tailor training programs."),
+            ]),
+            section_id="physical_development_info"
+        ),
+
         date_slider(
             label_id="reporting-period-physical",
             slider_id="reporting-slider-physical",

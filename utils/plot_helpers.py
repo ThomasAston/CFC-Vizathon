@@ -82,13 +82,14 @@ def base_bar_figure(
             y=positive_df["height"],
             base=positive_df["base"],
             marker=dict(
-                color=positive_df["color_val"],
-                colorscale="Blues",
-                line=dict(width=0)
+            color=positive_df["color_val"],
+            colorscale="Blues",
+            line=dict(width=0)
             ),
             customdata=positive_df["total"],
             hovertemplate=f"%{{customdata:.2f}}{hover_suffix}<extra></extra>",
-            name="Positive"
+            name="Positive",
+            showlegend=False
         ))
 
     # Negative bars in Oranges
@@ -104,7 +105,8 @@ def base_bar_figure(
             ),
             customdata=negative_df["total"],
             hovertemplate=f"%{{customdata:.2f}}{hover_suffix}<extra></extra>",
-            name="Negative"
+            name="Negative",
+            showlegend=False
         ))
 
     # Add dummy traces for average legends

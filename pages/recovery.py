@@ -16,6 +16,7 @@ gps_df = load_gps_data("DATA/CFC GPS Data.csv")
 shapes, annotations = get_matchday_shapes_annotations(gps_df)
 
 def render_recovery(player_id):
+
     radar_fig = recovery_radar_chart(rec_df)
     score = rec_df["emboss_baseline_score"].iloc[-1]
     score_color = emboss_color(score)
@@ -66,6 +67,20 @@ def render_recovery(player_id):
     ]), "overall_recovery")
 
     return html.Div([
+        collapsible_section(
+        "Module Guide",
+        html.Div([
+            html.P("This module summarises player recovery using composite scores derived from subjective and/or objective data sources."),
+            html.Ul([
+                html.Li("Composite scores represent a weighted summary of recovery-related indicators (e.g. sleep, soreness, fatigue)."),
+                html.Li("Use the date slider to explore how recovery status has changed over time."),
+                html.Li("Toggle between different composite metrics to analyse trends or red flags."),
+            ]),
+            html.P("Use this to support decisions around rest, rehabilitation, and load management."),
+        ]),
+        section_id="recovery_info"
+        ),
+
         html.H3("Most Recent Scores", style={"textAlign": "center"}),
 
         html.Div([
@@ -96,7 +111,7 @@ def render_recovery(player_id):
         completeness_section,
         overall_section
 
-    ], style={"maxWidth": "90%", "margin": "0 auto"})
+    ], style={"margin": "0 auto"})
 
     
 @callback(
@@ -209,7 +224,7 @@ def update_overall_score(selected_range):
         metric="emboss_baseline_score",
         x_range=[start, end],
         hover_suffix=" %",
-        y_range=[-1, 1],
+        y_range=[None, None],
         shapes=shapes,
         annotations=annotations
     )
@@ -221,6 +236,17 @@ def update_overall_score(selected_range):
     prevent_initial_call=True
 )
 def toggle_overall_section(n, is_open):
+    if n:
+        return not is_open
+    return is_open
+
+@callback(
+    Output("recovery_info-collapse", "is_open"),
+    Input("recovery_info-toggle", "n_clicks"),
+    State("recovery_info-collapse", "is_open"),
+    prevent_initial_call=True
+)
+def toggle_recovery_info(n, is_open):
     if n:
         return not is_open
     return is_open
