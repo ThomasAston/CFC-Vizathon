@@ -45,7 +45,7 @@ layout = html.Div([
     html.Div([
         html.H3("Squad Averages", style={"textAlign": "center"}),
         html.Div([
-            html.H4("Emboss Baseline", style={"marginBottom": "4px", "color": "#444"}),
+            html.H4("Overall Score", style={"marginBottom": "4px", "color": "#444"}),
             html.H2(
                 f"{score:.2f}",
                 style={

@@ -84,7 +84,7 @@ def render_recovery(player_id):
         html.H3("Most Recent Scores", style={"textAlign": "center"}),
 
         html.Div([
-            html.H4("Emboss Baseline", style={"marginBottom": "4px", "color": "#444"}),
+            html.H4("Overall Score", style={"marginBottom": "4px", "color": "#444"}),
             html.H2(
                 f"{score:.2f}",
                 style={
