@@ -1,8 +1,6 @@
 from dash import Dash, dcc, html, Input, Output
 import pages.homepage as homepage
 import pages.biography as biography
-import pages.highlights as highlights
-import pages.squads as squads
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 server = app.server
