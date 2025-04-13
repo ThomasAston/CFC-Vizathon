@@ -147,7 +147,14 @@ def base_bar_figure(
         showlegend=True,
         hovermode="x unified",
         bargap=0,
-        legend=dict(x=0, y=1, xanchor="left", yanchor="top", font=dict(size=12)),
+        legend=dict(
+            x=0, 
+            y=1, 
+            xanchor="left", 
+            yanchor="top", 
+            font=dict(size=12),
+            bgcolor="rgba(255,255,255,0.5)"  # Add opacity to legend background
+        ),
         shapes=[*(shapes or []), *avg_lines],
         autosize=True,
         height=250,
