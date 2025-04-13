@@ -170,7 +170,6 @@ def toggle_composite_section(n, is_open):
     return is_open
 
 
-
 @callback(
     Output("completeness-trend-graph", "figure"),
     Input("completeness-metric-dropdown", "value"),

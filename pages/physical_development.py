@@ -1,4 +1,4 @@
-from dash import callback, dcc, html, Input, Output, State, ctx
+from dash import callback, dcc, html, Input, Output, State, ctx, no_update
 from datetime import datetime
 from utils.data_loader import load_physical_data, compute_physical_gradient_df
 from utils.plot_helpers import base_bar_figure, create_physical_heatmap
@@ -37,8 +37,57 @@ def render_physical_development(player_id):
         ),
         html.Div(id="physical-demand-output", style={"width": "100%", "marginTop": "40px"}),
 
-        collapsible_section("Isometric Expression Trends", html.Div(id="iso_trends-content"), "iso_trends"),
-        collapsible_section("Dynamic Expression Trends", html.Div(id="dyn_trends-content"), "dyn_trends")
+        collapsible_section("Isometric Expression Trends", html.Div([
+            html.Div([
+                dcc.Dropdown(
+                    id="iso-movement-dropdown",
+                    options=[{"label": m.title(), "value": m}
+                            for m in phys_df[phys_df["expression"] == "isometric"]["movement"].unique()],
+                    value="agility",
+                    clearable=False,
+                    searchable=False,
+                    style={"minWidth": "200px", "flex": "1"}
+                ),
+                dcc.Dropdown(
+                    id="iso-quality-dropdown",
+                    options=[],
+                    value="acceleration",
+                    clearable=False,
+                    searchable=False,
+                    style={"minWidth": "200px", "flex": "1"}
+                )
+            ], style={
+                "display": "flex", "flexWrap": "wrap", "gap": "10px",
+                "justifyContent": "center", "marginBottom": "10px"
+            }),
+            dcc.Graph(id="iso-trend-graph", config={"displayModeBar": False})
+        ]), "iso_trends"),
+
+        collapsible_section("Dynamic Expression Trends", html.Div([
+            html.Div([
+                dcc.Dropdown(
+                    id="dyn-movement-dropdown",
+                    options=[{"label": m.title(), "value": m}
+                            for m in phys_df[phys_df["expression"] == "dynamic"]["movement"].unique()],
+                    value="agility",
+                    clearable=False,
+                    searchable=False,
+                    style={"minWidth": "200px", "flex": "1"}
+                ),
+                dcc.Dropdown(
+                    id="dyn-quality-dropdown",
+                    options=[],
+                    value="acceleration",
+                    clearable=False,
+                    searchable=False,
+                    style={"minWidth": "200px", "flex": "1"}
+                )
+            ], style={
+                "display": "flex", "flexWrap": "wrap", "gap": "10px",
+                "justifyContent": "center", "marginBottom": "10px"
+            }),
+            dcc.Graph(id="dyn-trend-graph", config={"displayModeBar": False})
+        ]), "dyn_trends"),
     ])
 
 
@@ -98,74 +147,6 @@ def toggle_collapsible(*args):
     ]
 
 
-@callback(
-    Output("iso_trends-content", "children"),
-    Input("iso_trends-collapse", "is_open"),
-    Input("reporting-slider-physical", "value")
-)
-def render_iso_trends(is_open, selected_range):
-    if not is_open:
-        return None
-    return html.Div([
-        html.Div([
-            dcc.Dropdown(
-                id="iso-movement-dropdown",
-                options=[{"label": m.title(), "value": m}
-                         for m in phys_df[phys_df["expression"] == "isometric"]["movement"].unique()],
-                value="agility",
-                clearable=False,
-                searchable=False,
-                style={"minWidth": "200px", "flex": "1"}
-            ),
-            dcc.Dropdown(
-                id="iso-quality-dropdown",
-                options=[],
-                value="acceleration",
-                clearable=False,
-                searchable=False,
-                style={"minWidth": "200px", "flex": "1"}
-            )
-        ], style={
-            "display": "flex", "flexWrap": "wrap", "gap": "10px",
-            "justifyContent": "center", "marginBottom": "10px"
-        }),
-        dcc.Graph(id="iso-trend-graph", config={"displayModeBar": False})
-    ])
-
-
-@callback(
-    Output("dyn_trends-content", "children"),
-    Input("dyn_trends-collapse", "is_open"),
-    Input("reporting-slider-physical", "value")
-)
-def render_dyn_trends(is_open, selected_range):
-    if not is_open:
-        return None
-    return html.Div([
-        html.Div([
-            dcc.Dropdown(
-                id="dyn-movement-dropdown",
-                options=[{"label": m.title(), "value": m}
-                         for m in phys_df[phys_df["expression"] == "dynamic"]["movement"].unique()],
-                value="agility",
-                clearable=False,
-                searchable=False,
-                style={"minWidth": "200px", "flex": "1"}
-            ),
-            dcc.Dropdown(
-                id="dyn-quality-dropdown",
-                options=[],
-                value="acceleration",
-                clearable=False,
-                searchable=False,
-                style={"minWidth": "200px", "flex": "1"}
-            )
-        ], style={
-            "display": "flex", "flexWrap": "wrap", "gap": "10px",
-            "justifyContent": "center", "marginBottom": "10px"
-        }),
-        dcc.Graph(id="dyn-trend-graph", config={"displayModeBar": False})
-    ])
 
 @callback(
     Output("iso-quality-dropdown", "options"),
@@ -203,11 +184,15 @@ def update_dyn_quality_options(selected_movement):
 
 @callback(
     Output("iso-trend-graph", "figure"),
+    Input("iso_trends-collapse", "is_open"),
     Input("iso-movement-dropdown", "value"),
     Input("iso-quality-dropdown", "value"),
     Input("reporting-slider-physical", "value")
 )
-def update_iso_trend_plot(movement, quality, selected_range):
+def update_iso_trend_plot(is_open, movement, quality, selected_range):
+    if not is_open:
+        return no_update
+
     start, end = map(datetime.fromtimestamp, selected_range)
     metric_name = f"isometric_{movement}_{quality}".lower().replace(" ", "_")
 
@@ -231,11 +216,15 @@ def update_iso_trend_plot(movement, quality, selected_range):
 
 @callback(
     Output("dyn-trend-graph", "figure"),
+    Input("dyn_trends-collapse", "is_open"),
     Input("dyn-movement-dropdown", "value"),
     Input("dyn-quality-dropdown", "value"),
     Input("reporting-slider-physical", "value")
 )
-def update_dyn_trend_plot(movement, quality, selected_range):
+def update_dyn_trend_plot(is_open, movement, quality, selected_range):
+    if not is_open:
+        return no_update
+
     start, end = map(datetime.fromtimestamp, selected_range)
     metric_name = f"dynamic_{movement}_{quality}".lower().replace(" ", "_")
 
