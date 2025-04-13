@@ -1,5 +1,5 @@
 # CFC-Vizathon
-
+![Chelsea Fitness Console Logo](assets/logo.png)
 Welcome to my **CFC-Vizathon** entry! This repository contains the source code for my entry which can be viewed online here: [Chelsea Fitness Console](https://ta-cfc-vizathon.onrender.com/)
 
 ## Table of Contents
