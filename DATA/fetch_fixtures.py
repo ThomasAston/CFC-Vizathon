@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from dateutil.parser import isoparse
 
-API_KEY = "1f640d32af86dbe571abc0cc153a9e0b"  # Replace with your actual API key
+API_KEY = ""  # Replace with your actual API key
 TEAM_ID = 49  # Chelsea FC
 
 # Determine correct football season year

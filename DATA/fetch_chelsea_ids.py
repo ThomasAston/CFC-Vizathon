@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = "1f640d32af86dbe571abc0cc153a9e0b"  # Replace with your actual API key
+API_KEY = ""  # Replace with your actual API key
 
 headers = {
     "x-apisports-key": API_KEY
