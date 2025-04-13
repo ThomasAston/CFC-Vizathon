@@ -149,6 +149,8 @@ def base_bar_figure(
         bargap=0,
         legend=dict(x=0, y=1, xanchor="left", yanchor="top", font=dict(size=12)),
         shapes=[*(shapes or []), *avg_lines],
+        autosize=True,
+        height=250,
         annotations=annotations or []
     )
 
@@ -181,7 +183,14 @@ def bubble_plot_figure(data):
         xaxis=dict(title="Total Distance (m)", showline=True, linecolor="gray"),
         yaxis=dict(title="Average Speed (m/min)", showline=True),
         legend_title="Session Type",
-        legend=dict(x=1, y=1, xanchor="right", yanchor="top", font=dict(size=12)),
+        legend=dict(
+            x=1, 
+            y=1, 
+            xanchor="right", 
+            yanchor="top", 
+            font=dict(size=12),
+            bgcolor="rgba(255,255,255,0.5)"  # Add opacity to legend background
+        ),
         dragmode=False
     )
 
@@ -297,7 +306,7 @@ def recovery_radar_chart(pivoted_df):
 
     fig.update_layout(
         polar=dict(
-            bgcolor='white',
+            bgcolor='rgba(0,0,0,0)',  # transparent background
             radialaxis=dict(
                 visible=True,
                 showline=False,
@@ -305,7 +314,7 @@ def recovery_radar_chart(pivoted_df):
                 gridcolor='#ccc',
                 gridwidth=0.5,
                 tickvals=[],
-                range=[-1, 1]  # Force r axis to be between -1 and 1
+                range=[-1, 1]
             ),
             angularaxis=dict(
                 tickfont=dict(size=10),
@@ -315,14 +324,17 @@ def recovery_radar_chart(pivoted_df):
         ),
         showlegend=True,
         legend=dict(
-            x=0.9, y=0.9, xanchor="right", yanchor="top",
-            font=dict(size=10)
+            orientation="h",      # horizontal layout
+            x=0.5,                # centered horizontally
+            y=-0.0,               # place below the chart area
+            xanchor="center",
+            yanchor="top",
+            font=dict(size=10),
+            bgcolor="rgba(255,255,255,0.8)",
         ),
-        margin={"l": 40, "r": 40, "t": 20, "b": 20},
-        paper_bgcolor="#fff",
-        plot_bgcolor="#fff",
+        paper_bgcolor="rgba(0,0,0,0)",  # transparent background
+        plot_bgcolor="rgba(0,0,0,0)",  # transparent background
         dragmode="pan",
-        height=400
     )
 
     return fig

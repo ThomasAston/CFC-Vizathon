@@ -224,7 +224,7 @@ def update_iso_trend_plot(movement, quality, selected_range):
         y_range=[0, None],
         match_avg=None,
         training_avg=None,
-        hover_suffix=" %",
+        hover_suffix="",
         shapes=[],
         annotations=[]
     )
@@ -252,7 +252,7 @@ def update_dyn_trend_plot(movement, quality, selected_range):
         y_range=[0, None],
         match_avg=None,
         training_avg=None,
-        hover_suffix=" %",
+        hover_suffix="",
         shapes=[],
         annotations=[]
     )

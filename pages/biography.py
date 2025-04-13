@@ -1,7 +1,7 @@
 from dash import html, dcc, Input, Output, State, callback
 import json
 import plotly.graph_objects as go
-from pages import load_demand, physical_development, recovery
+from pages import load_demand, physical_development, recovery, injury_history, external_factors
 import matplotlib.colors as mcolors
 import pandas as pd
 
@@ -153,13 +153,13 @@ def render_tab(tab, player_id):
     if tab == "LoadDemand":
         return load_demand.render_load_demand(player_id)
     elif tab == "Injury":
-        return html.P("Coming soon...")
+        return injury_history.render_injury(player_id)
     elif tab == "Physical":
         return physical_development.render_physical_development(player_id)
     elif tab == "Recovery":
         return recovery.render_recovery(player_id)
     elif tab == "External":
-        return html.P("Coming soon...")
+        return external_factors.render_external_factors(player_id)
 
 @callback(
     Output("radar-compare", "figure"),

@@ -1,5 +1,6 @@
 import matplotlib.colors as mcolors
 
+
 colors = [mcolors.to_hex(c) for c in ['tab:blue', 'tab:orange', 'tab:green']]
 zone_colors = ["rgba(173, 216, 230, 0.6)",  # LightBlue (Zone 1)
                 "rgba(135, 206, 250, 0.6)",  # SkyBlue
@@ -26,3 +27,5 @@ time_metrics = {
 zone_cols = [
     "hr_zone_1_sec", "hr_zone_2_sec", "hr_zone_3_sec", "hr_zone_4_sec", "hr_zone_5_sec"
 ]
+
+body_markers = [[0.5, 0.46, 0.54], [0.93, 0.53, 0.53]]

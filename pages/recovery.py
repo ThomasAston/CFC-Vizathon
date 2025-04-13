@@ -4,6 +4,9 @@ from utils.components import date_slider, collapsible_section
 import dash_bootstrap_components as dbc
 from datetime import datetime
 from dash import callback, dcc, html, Input, Output
+import dash_daq as daq
+import plotly.graph_objects as go
+from utils.constants import colors
 
 
 rec_df = load_recovery_data("DATA/CFC Recovery status Data.csv")
@@ -85,16 +88,15 @@ def render_recovery(player_id):
 
         html.Div([
             html.H4("Overall Score", style={"marginBottom": "4px", "color": "#444"}),
-            html.H2(
-                f"{score:.2f}",
-                style={
-                    "color": score_color,
-                    "fontWeight": "bold",
-                    "margin": "0",
-                    "fontSize": "32px"
-                }
-            )
-        ], style={"textAlign": "center", "marginBottom": "20px"}),
+            daq.Gauge(
+            showCurrentValue=False,
+            units="%",
+            value=score * 100,
+            max=100,
+            min=-100,
+            color={"gradient":True,"ranges":{"red":[-100,20],"yellow":[20,60],"green":[60,100]}},
+        )
+        ], style={"textAlign": "center", "marginBottom": "-100px"}),
 
         dcc.Graph(figure=radar_fig, config={"displayModeBar": False}),
 

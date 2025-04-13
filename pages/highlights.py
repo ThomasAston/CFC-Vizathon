@@ -3,6 +3,7 @@ import json
 from utils.data_loader import load_fixtures, load_gps_data, load_physical_data, load_recovery_data
 from utils.components import create_fixture_cards
 from utils.plot_helpers import bubble_plot, create_physical_heatmap, emboss_color, recovery_radar_chart
+import dash_daq as daq
 
 fixtures = load_fixtures("DATA/fixtures.json")
 fixture_cards = create_fixture_cards(fixtures)
@@ -35,8 +36,15 @@ layout = html.Div([
     html.H2([html.Span("\uebce", className="icon"), "Load Demand"], className="section-heading", style={"marginTop": "50px"}),
     bubble_plot(gps_df),
 
-    html.H2([html.Span("\uebec", className="icon"), "Injury History"], className="section-heading", style={"marginTop": "50px"}),
-    html.P("Coming soon...", style={"textAlign": "center"}),
+    html.H2([html.Span("\uebec", className="icon"), "Injuries"], className="section-heading", style={"marginTop": "50px"}),
+    html.Div([
+        html.H3("Current Injuries", style={"textAlign": "center"}),
+        html.Ul([
+            html.Li("Player 1: Hamstring strain"),
+            html.Li("Player 2: Ankle sprain"),
+            html.Li("Player 3: Knee injury"),
+        ], style={"listStyleType": "none", "padding": 0, "textAlign": "center"})
+    ], style={"marginBottom": "50px"}),
 
     html.H2([html.Span("\uea9e", className="icon"), "Physical Development"], className="section-heading", style={"marginTop": "50px"}),
     create_physical_heatmap(phys_df, "isometric", "Isometric Expression"),
@@ -44,26 +52,19 @@ layout = html.Div([
     html.H2([html.Span("\uead8", className="icon"), "Recovery"], className="section-heading", style={"marginTop": "50px"}),
     html.Div([
         html.H3("Squad Averages", style={"textAlign": "center"}),
-        html.Div([
+            html.Div([
             html.H4("Overall Score", style={"marginBottom": "4px", "color": "#444"}),
-            html.H2(
-                f"{score:.2f}",
-                style={
-                    "color": score_color,
-                    "fontWeight": "bold",
-                    "margin": "0",
-                    "fontSize": "32px"
-                }
-            )
-        ], style={
-            "textAlign": "center",
-            "marginBottom": "20px"
-        }),
+            daq.Gauge(
+            showCurrentValue=False,
+            units="%",
+            value=score * 100,
+            max=100,
+            min=-100,
+            color={"gradient":True,"ranges":{"red":[-100,20],"yellow":[20,60],"green":[60,100]}},
+        )
+        ], style={"textAlign": "center", "marginBottom": "-100px"}),
 
         dcc.Graph(figure=radar_fig, config={"displayModeBar": False})
     ], style={"maxWidth": "600px", "margin": "0 auto"}),
-
-    html.H2([html.Span("\ueb1d", className="icon"), "External Factors"], className="section-heading", style={"marginTop": "50px"}),
-    html.P("Coming soon...", style={"textAlign": "center"}),
 
 ], style={"padding": "12px"})
